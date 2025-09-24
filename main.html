@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>계란 할인 정보</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', Arial, sans-serif;
+      margin: 24px;
+      color: #222;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .range {
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .today {
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .row {
+      display: flex;
+      /* Flexbox 사용 */
+      align-items: center;
+      /* 수직 위치를 동일하게 정렬 */
+      gap: 10px;
+      /* 요소 간 간격 */
+      font-family: Arial, sans-serif;
+      /* 글꼴 설정 */
+    }
+
+    .promotion-items {
+      display: inline-block;
+      /* 가로로 표시 */
+      white-space: nowrap;
+      /* 텍스트 줄바꿈 방지 */
+    }
+
+    .label {
+      display: inline-block;
+      width: 90px;
+      color: #555;
+    }
+
+    .error {
+      color: #c62828;
+      font-weight: 600;
+    }
+
+    .hr2 {
+      margin: 20px 0;
+      border: none;
+      border-top: 1px solid #ddd;
+    }
+
+    .toggles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .toggle {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .toggle.active {
+      background: #e8f0fe;
+      border-color: #90caf9;
+    }
+
+    .list {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .item {
+      padding: 6px 0;
+      border-bottom: 1px dashed #eee;
+    }
+
+    .item:last-child {
+      border-bottom: none;
+    }
+
+    .loading {
+      color: #1565c0;
+      margin: 9px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>오늘 계란 할인 정보</h1>
+  <div class="today" id="todayText"></div>
+  <div id="loadingMsg" class="loading">⌛페이지가 로딩중입니다. 잠시만 기다려주세요.<span id="loadingTimer"></span></div>
+  <div class="card">
+    <div class="row" id="homeplus"><strong>홈플러스</strong></div>
+    <div class="row" id="emart"><strong>이마트</strong></div>
+    <div class="row" id="lottemart"><strong>롯데마트</strong></div>
+    <div class="row" id="hanaro"><strong>하나로마트</strong></div>
+  </div>
+  <!-- <hr class="hr2" />
+  <div class="toggles">
+    <button class="toggle" data-mart="homeplus">홈플러스</button>
+    <button class="toggle" data-mart="emart">이마트</button>
+    <button class="toggle" data-mart="lottemart">롯데마트</button>
+    <button class="toggle" data-mart="hanaro">하나로마트</button>
+  </div>
+  <div id="martList" class="list"></div> -->
+  <script>
+    // 정보가 로딩될때까지 안내메세지 표시(카운트 포함)
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 오늘 날짜 표시
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+      const date = today.getDate();
+      const dayOfWeek = today.getDay();
+      const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+
+      const todayTextElement = document.getElementById('todayText');
+      todayTextElement.textContent = `오늘 날짜: ${year}년 ${month}월 ${date}일 (${days[dayOfWeek]})`;
+
+      // 로딩 메시지와 초 카운트 설정
+      let counter = 0; // 초 카운트 초기화
+      const loadingTimerElement = document.getElementById('loadingTimer');
+      const loadingMessageElement = document.getElementById('loadingMsg');
+
+      // 타이머 시작
+      const timerInterval = setInterval(() => {
+        counter++;
+        loadingTimerElement.textContent = ` (${counter}초)`;
+      }, 1000);
+
+      let martData; // 마트 데이터 변수 선언
+
+      try {
+        // API 데이터 요청
+        const response = await fetch('/api/data');
+        if (!response.ok) {
+          throw new Error('네트워크 응답이 올바르지 않습니다');
+        }
+
+        martData = await response.json();
+
+        // 홈플러스 정보 수신
+        const homeplusElement = document.getElementById('homeplus');
+        if (martData.length > 0) {
+          homeplusElement.innerHTML += martData.map(item => {
+            const title = item.title || '';
+            const price = item.price || '';
+            const discountRate = item.discountRate ? `(${item.discountRate})` : '';
+            const comment = item.comment && item.comment !== '코멘트 없음' ? ` / ${item.comment}` : '';
+            const promotionPeriod = item.promotionPeriod ? ` / ${item.promotionPeriod}` : '';
+            return `<span class="promotion-items">${title} ${price}${discountRate}${comment}${promotionPeriod}</span>`;
+          }).join('');
+        } else {
+          homeplusElement.innerHTML += '<span style="color:gray;">오늘 날짜의 할인 정보 데이터가 없습니다.</span>';
+        }
+
+        // 타이머 중단 및 로딩 메시지 제거
+        clearInterval(timerInterval);
+        loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨기기
+
+      } catch (error) {
+        // 에러 처리 및 메시지 유지
+        homeplusElement.innerHTML = '<span class="error">데이터를 불러오는 도중 문제가 발생했습니다. 다시 시도해주세요.</span>';
+        console.error('마트 데이터를 불러오는 중 오류 발생:', error);
+        clearInterval(timerInterval); // 타이머 중단
+        loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨기기
+      }
+    });
+
+
+    function renderEggItems(mart) {
+      const container = document.getElementById(mart);
+      const data = martData[mart];
+      let html = '';
+      if (data.error) {
+        html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span><span class="error">${data.error}</span>`;
+      } else {
+        html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span>`;
+        data.todayEggItems.forEach(item => {
+          html += `<div class="row-item"><span class="item-name">${item.name}</span><br/>${item.price}</div>`;
+        });
+      }
+      container.innerHTML = html;
+    }
+
+    function renderAllItems(mart) {
+      const listContainer = document.getElementById('martList');
+      const data = martData[mart];
+      let html = '';
+      if (data.error) {
+        html = `<div class="error-msg">${data.error}</div>`;
+      } else {
+        data.allPromotionItems.forEach(item => {
+          html += `<div class="item">${item.name} / ${item.price} / ${item.comment}</div>`;
+        });
+      }
+      listContainer.innerHTML = html;
+    }
+
+    // renderEggItems('homeplus'); // 이 부분을 제거하여 초기 로딩 시 상품을 표시하지 않음
+
+    const toggles = document.querySelectorAll('.toggle');
+    toggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const mart = toggle.dataset.mart;
+        toggles.forEach(t => t.classList.remove('active'));
+        toggle.classList.add('active');
+        renderAllItems(mart);
+      });
+    });
+
+
+    // 홈플러스 정보 수신
+    async function fetchHomeplusData() {
+      const response = await fetch('/api/data');
+      const data = await response.json();
+
+      const targetDiv = document.getElementById('homeplus');
+
+      if (data.length === 0) {
+        targetDiv.innerHTML += '<span style="color:gray;">오늘 날짜 프로모션 데이터가 없습니다.</span>';
+        return;
+      }
+
+      // 동적으로 텍스트 생성
+      const formattedItems = data.map(item => {
+        // 텍스트 조합: 값이 존재할 때만 추가
+        const title = item.title || '';
+        const price = item.price || '';
+        const discountRate = item.discountRate ? `(${item.discountRate})` : ''; // 할인율 존재 여부 확인
+        const comment = item.comment && item.comment !== '코멘트 없음' ? ` / ${item.comment}` : ''; // 코멘트 확인
+        const promotionPeriod = item.promotionPeriod ? ` / ${item.promotionPeriod}` : ''; // 행사 기간 확인
+
+        // 최종 텍스트 조합
+        return `<span class="promotion-items">
+                ${title} ${price}${discountRate}${comment}${promotionPeriod}
+            </span>`;
+      });
+
+      // 텍스트 추가
+      targetDiv.innerHTML += formattedItems.join('');
+    }
+
+  </script>
+</body>
+
+</html>
