@@ -131,142 +131,166 @@
   </div>
   <div id="martList" class="list"></div> -->
   <script>
-    // 정보가 로딩될때까지 안내메세지 표시(카운트 포함)
-    document.addEventListener('DOMContentLoaded', async () => {
+  // 데이터를 렌더링하는 함수
+  function renderHomeplusData(data, targetDiv) {
+      // 데이터가 배열인지 확인
+      if (!Array.isArray(data)) {
+          console.error("데이터 형식 오류: 배열이 아닙니다.", data);
+          const errorMessage = document.createElement("span");
+          errorMessage.style.color = "gray";
+          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
+          targetDiv.appendChild(errorMessage); // 기존 내용 유지하며 오류 메시지 추가
+          return;
+      }
+
+      // 데이터가 비어 있을 경우
+      if (data.length === 0) {
+          const noDataMessage = document.createElement("span");
+          noDataMessage.style.color = "gray";
+          noDataMessage.textContent = "오늘 날짜의 할인 정보 데이터가 없습니다.";
+          targetDiv.appendChild(noDataMessage); // 기존 내용 유지하며 빈 데이터 메시지 추가
+          return;
+      }
+
+      // 데이터 렌더링 처리
+      data.forEach(item => {
+          const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
+          promotionItem.className = "promotion-items"; // 클래스 이름 설정
+
+          // 데이터 필드 추출 및 처리
+          const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
+          const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
+          const discountRate = item.discountRate ? `(${item.discountRate})` : ''; // 할인율이 공백일 경우 괄호를 생략
+          const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
+          const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
+
+          // 출력 텍스트 생성
+          let displayText = title; // 필수 필드: 제목
+          
+          // 가격 및 할인율 추가
+          if (price) {displayText += ` / ${price}${discountRate}`;}
+
+          // 코멘트 추가
+          if (comment) {displayText += ` / ${comment}`;}
+
+          // 행사 기간 추가
+          if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;}
+
+          // 최종 텍스트를 div에 설정
+          promotionItem.textContent = displayText;
+
+          // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
+          targetDiv.appendChild(promotionItem);
+      });
+  }
+
+  // 데이터를 가져오는 함수
+  async function fetchHomeplusData(targetDiv) {
+      try {
+          // API 요청 수행
+          const response = await fetch('/api/homeplusData');
+          if (!response.ok) {
+              throw new Error('네트워크 응답이 올바르지 않습니다');
+          }
+
+          // 서버에서 받은 데이터 처리
+          const data = await response.json();
+          // console.log("서버에서 받은 데이터:", data);
+
+          // 데이터 추출
+          const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
+          // console.log("렌더링에 사용될 데이터:", formattedData);
+
+          // 렌더링 함수 호출
+          renderHomeplusData(formattedData, targetDiv);
+      } catch (error) {
+          // 오류 처리
+          const errorMessage = document.createElement("span");
+          errorMessage.style.color = "red";
+          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다. 다시 시도해주세요.";
+          targetDiv.appendChild(errorMessage);
+          console.error("마트 데이터를 불러오는 중 오류 발생:", error);
+      }
+  }
+
+    // 요일 계산 함수 (요일을 한국어로 반환)
+    function getDayInKorean(dayIndex) {
+        const daysKor = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+        return daysKor[dayIndex];
+    }
+
+  // DOMContentLoaded 이벤트: 페이지 로드 시 실행
+  document.addEventListener('DOMContentLoaded', async () => {
       // 오늘 날짜 표시
       const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth() + 1;
-      const date = today.getDate();
-      const dayOfWeek = today.getDay();
-      const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-
       const todayTextElement = document.getElementById('todayText');
-      todayTextElement.textContent = `오늘 날짜: ${year}년 ${month}월 ${date}일 (${days[dayOfWeek]})`;
+      // 오늘 요일 계산
+      const dayKor = getDayInKorean(today.getDay());
 
-      // 로딩 메시지와 초 카운트 설정
-      let counter = 0; // 초 카운트 초기화
+      todayTextElement.textContent = `오늘 날짜: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${dayKor})`;
+
+      // 로딩 타이머 및 메시지 설정
+      let counter = 0;
       const loadingTimerElement = document.getElementById('loadingTimer');
       const loadingMessageElement = document.getElementById('loadingMsg');
+      const targetDiv = document.getElementById('homeplus'); // 홈플러스 데이터를 추가할 대상
 
-      // 타이머 시작
+      // 로딩 타이머 작동
       const timerInterval = setInterval(() => {
-        counter++;
-        loadingTimerElement.textContent = ` (${counter}초)`;
+          counter++;
+          loadingTimerElement.textContent = ` (${counter}초)`;
       }, 1000);
 
-      let martData; // 마트 데이터 변수 선언
+      // 데이터 가져오기 및 로딩 메시지 제거
+      await fetchHomeplusData(targetDiv);
+      loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨김
+      clearInterval(timerInterval); // 타이머 중지
+  });
 
-      try {
-        // API 데이터 요청
-        const response = await fetch('/api/data');
-        if (!response.ok) {
-          throw new Error('네트워크 응답이 올바르지 않습니다');
+    /*
+        function renderEggItems(mart) {
+          const container = document.getElementById(mart);
+          const data = martData[mart];
+          let html = '';
+          if (data.error) {
+            html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span><span class="error">${data.error}</span>`;
+          } else {
+            html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span>`;
+            data.todayEggItems.forEach(item => {
+              html += `<div class="row-item"><span class="item-name">${item.name}</span><br/>${item.price}</div>`;
+            });
+          }
+          container.innerHTML = html;
         }
-
-        martData = await response.json();
-
-        // 홈플러스 정보 수신
-        const homeplusElement = document.getElementById('homeplus');
-        if (martData.length > 0) {
-          homeplusElement.innerHTML += martData.map(item => {
-            const title = item.title || '';
-            const price = item.price || '';
-            const discountRate = item.discountRate ? `(${item.discountRate})` : '';
-            const comment = item.comment && item.comment !== '코멘트 없음' ? ` / ${item.comment}` : '';
-            const promotionPeriod = item.promotionPeriod ? ` / ${item.promotionPeriod}` : '';
-            return `<span class="promotion-items">${title} ${price}${discountRate}${comment}${promotionPeriod}</span>`;
-          }).join('');
-        } else {
-          homeplusElement.innerHTML += '<span style="color:gray;">오늘 날짜의 할인 정보 데이터가 없습니다.</span>';
+    
+        function renderAllItems(mart) {
+          const listContainer = document.getElementById('martList');
+          const data = martData[mart];
+          let html = '';
+          if (data.error) {
+            html = `<div class="error-msg">${data.error}</div>`;
+          } else {
+            data.allPromotionItems.forEach(item => {
+              html += `<div class="item">${item.name} / ${item.price} / ${item.comment}</div>`;
+            });
+          }
+          listContainer.innerHTML = html;
         }
-
-        // 타이머 중단 및 로딩 메시지 제거
-        clearInterval(timerInterval);
-        loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨기기
-
-      } catch (error) {
-        // 에러 처리 및 메시지 유지
-        homeplusElement.innerHTML = '<span class="error">데이터를 불러오는 도중 문제가 발생했습니다. 다시 시도해주세요.</span>';
-        console.error('마트 데이터를 불러오는 중 오류 발생:', error);
-        clearInterval(timerInterval); // 타이머 중단
-        loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨기기
-      }
-    });
-
-
-    function renderEggItems(mart) {
-      const container = document.getElementById(mart);
-      const data = martData[mart];
-      let html = '';
-      if (data.error) {
-        html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span><span class="error">${data.error}</span>`;
-      } else {
-        html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span>`;
-        data.todayEggItems.forEach(item => {
-          html += `<div class="row-item"><span class="item-name">${item.name}</span><br/>${item.price}</div>`;
-        });
-      }
-      container.innerHTML = html;
-    }
-
-    function renderAllItems(mart) {
-      const listContainer = document.getElementById('martList');
-      const data = martData[mart];
-      let html = '';
-      if (data.error) {
-        html = `<div class="error-msg">${data.error}</div>`;
-      } else {
-        data.allPromotionItems.forEach(item => {
-          html += `<div class="item">${item.name} / ${item.price} / ${item.comment}</div>`;
-        });
-      }
-      listContainer.innerHTML = html;
-    }
+          */
 
     // renderEggItems('homeplus'); // 이 부분을 제거하여 초기 로딩 시 상품을 표시하지 않음
 
-    const toggles = document.querySelectorAll('.toggle');
-    toggles.forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        const mart = toggle.dataset.mart;
-        toggles.forEach(t => t.classList.remove('active'));
-        toggle.classList.add('active');
-        renderAllItems(mart);
-      });
-    });
-
-
-    // 홈플러스 정보 수신
-    async function fetchHomeplusData() {
-      const response = await fetch('/api/data');
-      const data = await response.json();
-
-      const targetDiv = document.getElementById('homeplus');
-
-      if (data.length === 0) {
-        targetDiv.innerHTML += '<span style="color:gray;">오늘 날짜 프로모션 데이터가 없습니다.</span>';
-        return;
-      }
-
-      // 동적으로 텍스트 생성
-      const formattedItems = data.map(item => {
-        // 텍스트 조합: 값이 존재할 때만 추가
-        const title = item.title || '';
-        const price = item.price || '';
-        const discountRate = item.discountRate ? `(${item.discountRate})` : ''; // 할인율 존재 여부 확인
-        const comment = item.comment && item.comment !== '코멘트 없음' ? ` / ${item.comment}` : ''; // 코멘트 확인
-        const promotionPeriod = item.promotionPeriod ? ` / ${item.promotionPeriod}` : ''; // 행사 기간 확인
-
-        // 최종 텍스트 조합
-        return `<span class="promotion-items">
-                ${title} ${price}${discountRate}${comment}${promotionPeriod}
-            </span>`;
-      });
-
-      // 텍스트 추가
-      targetDiv.innerHTML += formattedItems.join('');
-    }
+    /*
+        const toggles = document.querySelectorAll('.toggle');
+        toggles.forEach(toggle => {
+          toggle.addEventListener('click', () => {
+            const mart = toggle.dataset.mart;
+            toggles.forEach(t => t.classList.remove('active'));
+            toggle.classList.add('active');
+            renderAllItems(mart);
+          });
+        });
+        */
 
   </script>
 </body>

@@ -1,5 +1,5 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
 const path = require('path');
 
 const app = express();
@@ -10,12 +10,12 @@ async function scrapeHomeplusData() {
     let martData = {
         homeplus: {
             eggItemsWithinPromotionPeriod: [], // HTML로 넘길 데이터
-            promotionPeriod: '', // 행사 기간 텍스트
+            promotionPeriod: '', // 행사 기간
             error: null,
         },
     };
 
-    const homeplusURL = 'https://mfront.homeplus.co.kr/leaflet?categoryId=55&gnbNo=207&homeType=MART&sort=RANK';
+    const homeplusURL = 'https://mfront.homeplus.co.kr/leaflet?gnbNo=207&homeType=MART';
 
     try {
         const browser = await puppeteer.launch({ headless: true });
@@ -26,11 +26,11 @@ async function scrapeHomeplusData() {
         await page.goto(homeplusURL);
 
         // 1초 동안 대기
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000)); // setTimeout이 1초뒤 완료되면 resolve가 호출(Promise 객체를 완료)
 
         // 행사 기간 텍스트 추출
-        martData.homeplus.promotionPeriod = await page.evaluate(() => {
-            const periodElement = document.querySelector('.css-xoi455.ejs6tb3'); // 특정 클래스에서 추출
+        martData.homeplus.promotionPeriod = await page.evaluate(() => { // page.evaluate는 특정 데이터를 가져오기 위한 puppeteer 메서드
+            const periodElement = document.querySelector('.css-xoi455.ejs6tb3');
             return periodElement ? periodElement.textContent.trim() : '할인 행사 기간 정보를 찾을 수 없습니다.';
         });
 
@@ -73,16 +73,22 @@ async function scrapeHomeplusData() {
 
         // 홈플러스 데이터 스크래핑
         martData.homeplus.eggItemsWithinPromotionPeriod = await page.evaluate((promoPeriod, today) => {
-            const filteredItems = [];
+            const filteredItems = []; // 계란 데이터
+            const allItems = []; // 전체 원본데이터 - 확인용
 
+            // DOM요소를 가져와서 정보 추출
             document.querySelectorAll('.detailInfoWrap').forEach(item => {
                 const title = item.querySelector('.css-ij8ita')?.textContent || ''; // 상품명
                 const discountRate = item.querySelector('.discountRate')?.textContent || ''; // 할인율
                 const price = item.querySelector('.priceValue')?.textContent || ''; // 가격
                 const comment = item.querySelector('.recomComment')?.textContent || ''; // 코멘트
 
+                // 원본 데이터를 저장
+                allItems.push({ title, discountRate, price, comment });
+
                 // 계란 관련 상품 필터링
-                const isEgg = /계란|특란|대란|달걀|행복대란|신선란/.test(title);
+                const eggKeywords = ['계란', '특란', '대란', '달걀', '행복대란', '신선란', '신선특란', '유기농란', '초특란'];
+                const isEgg = new RegExp(eggKeywords.join('|')).test(title);
 
                 // 조건 충족 시 데이터 추가
                 if (isEgg) {
@@ -96,15 +102,18 @@ async function scrapeHomeplusData() {
                 }
             });
 
-            return filteredItems;
+            return { allItems, filteredItems };
         }, martData.homeplus.promotionPeriod, todayDate);
 
-        // console.log("=== 최종 필터링된 데이터 ===");
-        // console.log(martData.homeplus.eggItemsWithinPromotionPeriod);
+            // console.log("=== 원본 상품 데이터 ===");
+            // console.log(martData.homeplus.eggItemsWithinPromotionPeriod.allItems);
+
+            // console.log("=== 최종 필터링된 데이터 ===");
+            // console.log(martData.homeplus.eggItemsWithinPromotionPeriod.filteredItems);
 
         await browser.close(); // 브라우저 닫기
     } catch (error) {
-        console.error('Homeplus data scraping failed:', error);
+        console.error('홈플러스 데이터 불러오기 실패:', error);
         martData.homeplus.error = '데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
     }
     return martData;
@@ -119,7 +128,7 @@ app.get('/', (req, res) => {
 });
 
 // API로 데이터 제공
-app.get('/api/data', async (req, res) => {
+app.get('/api/homeplusData', async (req, res) => {
     const data = await scrapeHomeplusData(); // 홈플러스 데이터 스크래핑 호출
     res.json(data.homeplus.eggItemsWithinPromotionPeriod); // JSON 데이터만 반환
 });
