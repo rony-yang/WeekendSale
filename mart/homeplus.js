@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
+const eggKeywords = require('./EggKeywords');
 
 // 홈플러스 데이터를 스크래핑하는 함수
 async function scrapeHomeplusData() {
@@ -67,7 +68,7 @@ async function scrapeHomeplusData() {
         // console.log(`행사 기간 내 포함 여부: ${isWithinPromotionPeriod}`);
 
         // 홈플러스 데이터 스크래핑
-        martData.homeplus.eggItemsWithinPromotionPeriod = await page.evaluate((promoPeriod, today) => {
+        martData.homeplus.eggItemsWithinPromotionPeriod = await page.evaluate((promoPeriod, today, eggKeywords) => {
             const filteredItems = []; // 계란 데이터
             const allItems = []; // 전체 원본데이터 - 확인용
 
@@ -82,7 +83,6 @@ async function scrapeHomeplusData() {
                 allItems.push({ title, discountRate, price, comment });
 
                 // 계란 관련 상품 필터링
-                const eggKeywords = ['계란', '특란', '대란', '달걀', '행복대란', '신선란', '신선특란', '유기농란', '초특란'];
                 const isEgg = new RegExp(eggKeywords.join('|')).test(title);
 
                 // 조건 충족 시 데이터 추가
@@ -98,7 +98,7 @@ async function scrapeHomeplusData() {
             });
 
             return { allItems, filteredItems };
-        }, martData.homeplus.promotionPeriod, todayDate);
+        }, martData.homeplus.promotionPeriod, todayDate, eggKeywords);
 
             // console.log("=== 원본 상품 데이터 ===");
             // console.log(martData.homeplus.eggItemsWithinPromotionPeriod.allItems);
