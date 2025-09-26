@@ -35,20 +35,13 @@
 
     .row {
       display: flex;
-      /* Flexbox 사용 */
       align-items: center;
-      /* 수직 위치를 동일하게 정렬 */
       gap: 10px;
-      /* 요소 간 간격 */
-      font-family: Arial, sans-serif;
-      /* 글꼴 설정 */
     }
 
     .promotion-items {
       display: inline-block;
-      /* 가로로 표시 */
-      white-space: nowrap;
-      /* 텍스트 줄바꿈 방지 */
+      white-space: nowrap; /* 텍스트 줄바꿈 방지 */
     }
 
     .label {
@@ -213,8 +206,8 @@
       }
   }
 
-    // 요일 계산 함수 (요일을 한국어로 반환)
-    function getDayInKorean(dayIndex) {
+  // 요일 계산 함수 (요일을 한국어로 반환)
+  function getDayInKorean(dayIndex) {
         const daysKor = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
         return daysKor[dayIndex];
     }
@@ -226,7 +219,6 @@
       const todayTextElement = document.getElementById('todayText');
       // 오늘 요일 계산
       const dayKor = getDayInKorean(today.getDay());
-
       todayTextElement.textContent = `오늘 날짜: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${dayKor})`;
 
       // 로딩 타이머 및 메시지 설정
