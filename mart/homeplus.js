@@ -1,3 +1,7 @@
+/*
+전단행사에서 확인하는 코드
+*/
+
 const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
 const eggKeywords = require('./EggKeywords');
 
@@ -11,7 +15,8 @@ async function scrapeHomeplusData() {
         },
     };
 
-    const homeplusURL = 'https://mfront.homeplus.co.kr/leaflet?gnbNo=207&homeType=MART';
+    // 전단행사에서 확인
+    const homeplusURL = 'https://mfront.homeplus.co.kr/leaflet?categoryId=79&gnbNo=207&homeType=MART&sort=RANK';
 
     try {
         const browser = await puppeteer.launch({ headless: true });
@@ -103,8 +108,8 @@ async function scrapeHomeplusData() {
             // console.log("=== 원본 상품 데이터 ===");
             // console.log(martData.homeplus.eggItemsWithinPromotionPeriod.allItems);
 
-            // console.log("=== 최종 필터링된 데이터 ===");
-            // console.log(martData.homeplus.eggItemsWithinPromotionPeriod.filteredItems);
+            console.log("=== 최종 필터링된 데이터 ===");
+            console.log(martData.homeplus.eggItemsWithinPromotionPeriod.filteredItems);
 
         await browser.close(); // 브라우저 닫기
     } catch (error) {

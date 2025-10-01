@@ -3,7 +3,7 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-const { scrapeHomeplusData } = require('./mart/homeplus');
+const { scrapeHomeplusData } = require('./mart/homeplus2');
 // const { scrapeEmartData } = require('./mart/emart');
 // const { scrapeHomeplusData } = require('./mart/lottemart');
 // const { scrapeHomeplusData } = require('./mart/hanaro');
@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api/homeplusData', async (req, res) => {
   try {
     const data = await scrapeHomeplusData();
-    res.json(data.homeplus.eggItemsWithinPromotionPeriod);
+    res.json(data.homeplus.eggItems);
   } catch (err) {
     console.error('API 에러:', err);
     res.status(500).json({ error: '데이터를 불러오는 중 문제가 발생했습니다.' });

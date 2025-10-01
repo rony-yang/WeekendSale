@@ -17,11 +17,6 @@
       margin-bottom: 8px;
     }
 
-    .range {
-      color: #666;
-      margin-bottom: 8px;
-    }
-
     .today {
       color: #333;
       margin-bottom: 4px;
@@ -61,46 +56,44 @@
       border-top: 1px solid #ddd;
     }
 
-    .toggles {
+  .toggles {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+      grid-template-columns: repeat(4, 1fr); /* 4등분 */
+      gap: 16px; /* 토글 그룹 간격 */
+  }
 
-    .toggle {
-      padding: 10px 12px;
+  .toggle-group {
+      display: flex;
+      flex-direction: column; /* 버튼 위에 데이터 표시 */
+      align-items: center;
+  }
+
+  .toggle {
+      padding: 8px 16px;
+      border-radius: 5px;
       border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fafafa;
-      cursor: pointer;
-      text-align: center;
-    }
+      background-color: #f9f9f9;
+      font-size: 18px;
+      margin-bottom: 8px;
+  }
 
-    .toggle.active {
-      background: #e8f0fe;
-      border-color: #90caf9;
-    }
-
-    .list {
+  .list {
+      white-space: pre-wrap; /* 줄바꿈 유지 */
+      margin-top: 10px;
+      padding: 8px;
       border: 1px solid #eee;
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: 5px;
       background: #fff;
-    }
-
-    .item {
-      padding: 6px 0;
-      border-bottom: 1px dashed #eee;
-    }
-
-    .item:last-child {
-      border-bottom: none;
-    }
+      font-size: 16px;
+      color: #444;
+      width: 100%; /* 버튼과 같은 너비 */
+      text-align: center;
+  }
 
     .loading {
-      color: #1565c0;
+      color: #0d64c7;
       margin: 9px 0;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -109,24 +102,47 @@
   <h1>오늘 계란 할인 정보</h1>
   <div class="today" id="todayText"></div>
   <div id="loadingMsg" class="loading">⌛페이지가 로딩중입니다. 잠시만 기다려주세요.<span id="loadingTimer"></span></div>
-  <div class="card">
+  <br>
+
+  <!-- <div class="card">
     <div class="row" id="homeplus"><strong>홈플러스</strong></div>
     <div class="row" id="emart"><strong>이마트</strong></div>
     <div class="row" id="lottemart"><strong>롯데마트</strong></div>
     <div class="row" id="hanaro"><strong>하나로마트</strong></div>
-  </div>
-  <!-- <hr class="hr2" />
-  <div class="toggles">
+  </div> 
+  <hr class="hr2" />-->
+
+<div class="toggles">
+  <div class="toggle-group">
     <button class="toggle" data-mart="homeplus">홈플러스</button>
-    <button class="toggle" data-mart="emart">이마트</button>
-    <button class="toggle" data-mart="lottemart">롯데마트</button>
-    <button class="toggle" data-mart="hanaro">하나로마트</button>
+    <div id="homeplusData" class="list"></div>
   </div>
-  <div id="martList" class="list"></div> -->
-  <script>
+  <div class="toggle-group">
+    <button class="toggle" data-mart="emart">이마트</button>
+    <div id="emartData" class="list"></div>
+  </div>
+  <div class="toggle-group">
+    <button class="toggle" data-mart="lottemart">롯데마트</button>
+    <div id="lottemartData" class="list"></div>
+  </div>
+  <div class="toggle-group">
+    <button class="toggle" data-mart="hanaro">하나로마트</button>
+    <div id="hanaroData" class="list"></div>
+  </div>
+</div>
+
+<script>
+/*
+~예시) 홈플러스 동작 흐름~
+DOMContentLoaded 에서 이벤트가 발생하면 즉시 fetchHomeplusData 호출
+fetch('/api/homeplusData')를 통해 서버에 요청을 보내 response.json() 데이터를 받아옴
+받아온 데이터를 renderHomeplusData 로 전달하여 데이터를 html에 표시
+*/
+
   // 데이터를 렌더링하는 함수
   function renderHomeplusData(data, targetDiv) {
       // 데이터가 배열인지 확인
+      /*
       if (!Array.isArray(data)) {
           console.error("데이터 형식 오류: 배열이 아닙니다.", data);
           const errorMessage = document.createElement("span");
@@ -134,16 +150,16 @@
           errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
           targetDiv.appendChild(errorMessage); // 기존 내용 유지하며 오류 메시지 추가
           return;
-      }
+      }*/
 
       // 데이터가 비어 있을 경우
-      if (data.length === 0) {
+      /*if (data.length === 0) {
           const noDataMessage = document.createElement("span");
           noDataMessage.style.color = "gray";
           noDataMessage.textContent = "오늘 날짜의 할인 정보 데이터가 없습니다.";
           targetDiv.appendChild(noDataMessage); // 기존 내용 유지하며 빈 데이터 메시지 추가
           return;
-      }
+      }*/
 
       // 데이터 렌더링 처리
       data.forEach(item => {
@@ -153,27 +169,26 @@
           // 데이터 필드 추출 및 처리
           const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
           const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
-          const discountRate = item.discountRate ? `(${item.discountRate})` : ''; // 할인율이 공백일 경우 괄호를 생략
+          const discountRate = item.discountRate ? ` (${item.discountRate})` : ''; // 할인율이 공백일 경우 괄호를 생략
           const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
-          const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
+          // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
 
           // 출력 텍스트 생성
           let displayText = title; // 필수 필드: 제목
-          
-          // 가격 및 할인율 추가
-          if (price) {displayText += ` / ${price}${discountRate}`;}
 
-          // 코멘트 추가
-          if (comment) {displayText += ` / ${comment}`;}
-
-          // 행사 기간 추가
-          if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;}
+          if (price) {displayText += ` / ${price}원 ${discountRate}`;} // 가격 추가
+          if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
+          // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
           // 최종 텍스트를 div에 설정
           promotionItem.textContent = displayText;
 
           // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
           targetDiv.appendChild(promotionItem);
+          
+          // 줄바꿈 태그 추가
+          const lineBreak = document.createElement('br');
+          targetDiv.appendChild(lineBreak);
       });
   }
 
@@ -182,13 +197,22 @@
       try {
           // API 요청 수행
           const response = await fetch('/api/homeplusData');
+          
+          // 응답상태 코드 및 ok상태 확인
+          // console.log("응답 상태 코드:", response.status); // HTTP 상태 코드 출력 (200, 404, etc.)
+          // console.log("response.ok:", response.ok); // 상태 코드가 200~299 사이인지 확인
+
           if (!response.ok) {
-              throw new Error('네트워크 응답이 올바르지 않습니다');
+            throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
           }
 
-          // 서버에서 받은 데이터 처리
-          const data = await response.json();
-          // console.log("서버에서 받은 데이터:", data);
+          // 서버의 원본 응답 데이터 확인
+          const responseText = await response.text();
+          // console.log("서버 응답 데이터 (원본):", responseText);
+
+          // JSON 변환 
+          const data = responseText ? JSON.parse(responseText) : {};
+          // console.log("JSON으로 변환된 데이터:", data);
 
           // 데이터 추출
           const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
@@ -200,7 +224,7 @@
           // 오류 처리
           const errorMessage = document.createElement("span");
           errorMessage.style.color = "red";
-          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다. 다시 시도해주세요.";
+          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
           targetDiv.appendChild(errorMessage);
           console.error("마트 데이터를 불러오는 중 오류 발생:", error);
       }
@@ -217,72 +241,30 @@
       // 오늘 날짜 표시
       const today = new Date();
       const todayTextElement = document.getElementById('todayText');
-      // 오늘 요일 계산
-      const dayKor = getDayInKorean(today.getDay());
-      todayTextElement.textContent = `오늘 날짜: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${dayKor})`;
+      const dayKor = getDayInKorean(today.getDay()); // 오늘 요일 계산
+      todayTextElement.textContent = `☘️오늘 날짜: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${dayKor})`;
 
       // 로딩 타이머 및 메시지 설정
       let counter = 0;
       const loadingTimerElement = document.getElementById('loadingTimer');
       const loadingMessageElement = document.getElementById('loadingMsg');
-      const targetDiv = document.getElementById('homeplus'); // 홈플러스 데이터를 추가할 대상
-
+      // const targetDiv = document.getElementById('homeplus'); // 홈플러스 데이터를 추가할 대상
+      
       // 로딩 타이머 작동
       const timerInterval = setInterval(() => {
           counter++;
           loadingTimerElement.textContent = ` (${counter}초)`;
       }, 1000);
 
+      const targetDiv = document.getElementById('homeplusData');
+
       // 데이터 가져오기 및 로딩 메시지 제거
       await fetchHomeplusData(targetDiv);
-      loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨김
+
+      // loadingMessageElement.style.display = 'none'; // 로딩 메시지 숨김
+      loadingMessageElement.textContent = "🔽 아래 정보를 확인해주세요.";
       clearInterval(timerInterval); // 타이머 중지
   });
-
-    /*
-        function renderEggItems(mart) {
-          const container = document.getElementById(mart);
-          const data = martData[mart];
-          let html = '';
-          if (data.error) {
-            html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span><span class="error">${data.error}</span>`;
-          } else {
-            html = `<span class="label">✔ ${mart === 'homeplus' ? '홈플러스' : ''}</span>`;
-            data.todayEggItems.forEach(item => {
-              html += `<div class="row-item"><span class="item-name">${item.name}</span><br/>${item.price}</div>`;
-            });
-          }
-          container.innerHTML = html;
-        }
-    
-        function renderAllItems(mart) {
-          const listContainer = document.getElementById('martList');
-          const data = martData[mart];
-          let html = '';
-          if (data.error) {
-            html = `<div class="error-msg">${data.error}</div>`;
-          } else {
-            data.allPromotionItems.forEach(item => {
-              html += `<div class="item">${item.name} / ${item.price} / ${item.comment}</div>`;
-            });
-          }
-          listContainer.innerHTML = html;
-        }
-          */
-
-    // renderEggItems('homeplus'); // 이 부분을 제거하여 초기 로딩 시 상품을 표시하지 않음
-
-    /*
-        const toggles = document.querySelectorAll('.toggle');
-        toggles.forEach(toggle => {
-          toggle.addEventListener('click', () => {
-            const mart = toggle.dataset.mart;
-            toggles.forEach(t => t.classList.remove('active'));
-            toggle.classList.add('active');
-            renderAllItems(mart);
-          });
-        });
-        */
 
   </script>
 </body>
