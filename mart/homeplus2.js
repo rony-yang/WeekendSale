@@ -44,7 +44,8 @@ async function scrapeHomeplusData() {
             document.querySelectorAll('.detailInfoWrap').forEach(item => {
                 const title = item.querySelector('.css-ij8ita')?.textContent || ''; // 상품명
                 const discountRate = item.querySelector('.discountRate')?.textContent || ''; // 할인율
-                const price = item.querySelector('.priceValue')?.textContent || ''; // 가격
+                const priceElement = item.querySelector('.price'); // price 클래스 안의 값만을 가져오도록 수정
+                const price = priceElement?.querySelector('.priceValue')?.textContent.trim() || ''; // 가격
                 const comment = item.querySelector('.recomComment')?.textContent || ''; // 코멘트
 
                 // 원본 데이터를 저장
