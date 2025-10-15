@@ -5,7 +5,7 @@ const PORT = 3000;
 
 const { scrapeHomeplusData } = require('./mart/homeplus2');
 const { scrapeEmartData } = require('./mart/emart');
-// const { scrapeHomeplusData } = require('./mart/lottemart');
+const { scrapeLottemartData } = require('./mart/lottemart');
 // const { scrapeHomeplusData } = require('./mart/hanaro');
 
 // 정적 파일 제공
@@ -27,6 +27,17 @@ app.get('/api/emartData', async (req, res) => {
   try {
     const data = await scrapeEmartData();
     res.json(data.emart.eggItems);
+  } catch (err) {
+    console.error('API 에러:', err);
+    res.status(500).json({ error: '데이터를 불러오는 중 문제가 발생했습니다.' });
+  }
+});
+
+// 롯데마트 데이터 제공
+app.get('/api/lottemartData', async (req, res) => {
+  try {
+    const data = await scrapeLottemartData();
+    res.json(data.lottemart.eggItems);
   } catch (err) {
     console.error('API 에러:', err);
     res.status(500).json({ error: '데이터를 불러오는 중 문제가 발생했습니다.' });

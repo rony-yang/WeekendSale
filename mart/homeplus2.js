@@ -3,7 +3,7 @@
 */
 
 const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
-const eggKeywords = require('./EggKeywords');
+const { eggKeywordsHomeplus } = require('./EggKeywords');
 
 // 홈플러스 데이터를 스크래핑하는 함수
 async function scrapeHomeplusData() {
@@ -36,7 +36,7 @@ async function scrapeHomeplusData() {
         // console.log('eggKeywords:', eggKeywords); // 계란 키워드 배열
 
         // 홈플러스 데이터 스크래핑
-        martData.homeplus.eggItems = await page.evaluate((eggKeywords) => {
+        martData.homeplus.eggItems = await page.evaluate((eggKeywordsHomeplus) => {
             const filteredItems = []; // 계란 데이터
             const allItems = []; // 전체 원본데이터 - 확인용
 
@@ -52,7 +52,7 @@ async function scrapeHomeplusData() {
                 allItems.push({ title, discountRate, price, comment });
 
                 // 계란 관련 상품 필터링
-                const isEgg = new RegExp(eggKeywords.join('|')).test(title);
+                const isEgg = new RegExp(eggKeywordsHomeplus.join('|')).test(title);
                 console.log(isEgg);
 
                 // 조건 충족 시 데이터 추가
@@ -62,7 +62,7 @@ async function scrapeHomeplusData() {
             });
 
             return { allItems, filteredItems };
-        }, eggKeywords);
+        }, eggKeywordsHomeplus);
         // }, martData.homeplus.promotionPeriod, todayDate, eggKeywords);
 
             // console.log("=== 원본 상품 데이터 ===");
