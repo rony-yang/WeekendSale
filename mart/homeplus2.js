@@ -15,7 +15,7 @@ async function scrapeHomeplusData() {
     };
 
     // 계란으로 직접 검색
-    const homeplusURL = 'https://mfront.homeplus.co.kr/search?entry=direct&keyword=%EA%B3%84%EB%9E%80';
+    const homeplusURL = 'https://mfront.homeplus.co.kr/search?entry=direct&keyword=%EA%B3%84%EB%9E%80%2030%EA%B5%AC';
 
     try {
         const browser = await puppeteer.launch({ headless: true });
