@@ -36,7 +36,8 @@
 
     .promotion-items {
       display: inline-block;
-      white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+      white-space: nowrap;
+      /* 텍스트 줄바꿈 방지 */
     }
 
     .label {
@@ -56,42 +57,52 @@
       border-top: 1px solid #ddd;
     }
 
-  .toggles {
+    .toggles {
       display: grid;
-      grid-template-columns: 1fr; /* 1열로 정렬 (세로 정렬) */
-      gap: 16px; /* 토글 그룹 간격 */
-  }
+      grid-template-columns: 1fr;
+      /* 1열로 정렬 (세로 정렬) */
+      gap: 16px;
+      /* 토글 그룹 간격 */
+    }
 
-.toggle-group {
-    display: flex; 
-    flex-direction: row; /* 버튼 + 출력 부분이 한 줄로 정렬 */
-    align-items: center; 
-    justify-content: flex-start; /* 출력 부분은 버튼 오른쪽으로 */
-    gap: 16px; /* 버튼과 출력 데이터 간 간격 */
-    width: 100%; /* 옵션: 원하는 레이아웃 비율을 안정적으로 설정 가능 */
-}
+    .toggle-group {
+      display: flex;
+      flex-direction: row;
+      /* 버튼 + 출력 부분이 한 줄로 정렬 */
+      align-items: center;
+      justify-content: flex-start;
+      /* 출력 부분은 버튼 오른쪽으로 */
+      gap: 16px;
+      /* 버튼과 출력 데이터 간 간격 */
+      width: 100%;
+      /* 옵션: 원하는 레이아웃 비율을 안정적으로 설정 가능 */
+    }
 
-.toggle {
-    padding: 8px 16px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    background-color: #f9f9f9;
-    font-size: 18px;
-    min-width: 120px; /* 버튼 기본 너비 */
-    text-align: center;
-}
+    .toggle {
+      padding: 8px 16px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      background-color: #f9f9f9;
+      font-size: 18px;
+      min-width: 120px;
+      /* 버튼 기본 너비 */
+      text-align: center;
+    }
 
-.list {
-    white-space: pre-wrap; /* 줄바꿈 유지 */
-    margin: 0; /* 상하 마진 제거 */
-    padding: 8px;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    background: #fff;
-    font-size: 16px;
-    color: #444;
-    width: 50%; /* 가변 레이아웃 */
-}
+    .list {
+      white-space: pre-wrap;
+      /* 줄바꿈 유지 */
+      margin: 0;
+      /* 상하 마진 제거 */
+      padding: 8px;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      background: #fff;
+      font-size: 16px;
+      color: #444;
+      width: 50%;
+      /* 가변 레이아웃 */
+    }
 
     .loading {
       color: #0d64c7;
@@ -104,275 +115,265 @@
 <body>
   <h1>오늘 계란 할인 정보</h1>
   <div class="today" id="todayText"></div>
-  <div id="loadingMsg" class="loading">⌛페이지가 로딩중입니다. 잠시만 기다려주세요.<span id="loadingTimer"></span></div>
+  <div id="loadingMsg" class="loading">⌛페이지가 로딩중입니다. 잠시만 기다려주세요.(10초 이상 기다려주세요.)
+    <span id="loadingTimer"></span>
+  </div>
   <br>
 
-  <!-- <div class="card">
-    <div class="row" id="homeplus"><strong>홈플러스</strong></div>
-    <div class="row" id="emart"><strong>이마트</strong></div>
-    <div class="row" id="lottemart"><strong>롯데마트</strong></div>
-    <div class="row" id="hanaro"><strong>하나로마트</strong></div>
-  </div> 
-  <hr class="hr2" />-->
+  <div class="toggles">
+    <div class="toggle-group">
+      <button class="toggle" data-mart="homeplus">홈플러스</button>
+      <div id="homeplusData" class="list"></div>
+    </div>
+    <div class="toggle-group">
+      <button class="toggle" data-mart="emart">이마트</button>
+      <div id="emartData" class="list"></div>
+    </div>
+    <div class="toggle-group">
+      <button class="toggle" data-mart="lottemart">롯데마트</button>
+      <div id="lottemartData" class="list"></div>
+    </div>
+  </div>
 
-<div class="toggles">
-  <div class="toggle-group">
-    <button class="toggle" data-mart="homeplus">홈플러스</button>
-    <div id="homeplusData" class="list"></div>
-  </div>
-  <div class="toggle-group">
-    <button class="toggle" data-mart="emart">이마트</button>
-    <div id="emartData" class="list"></div>
-  </div>
-  <div class="toggle-group">
-    <button class="toggle" data-mart="lottemart">롯데마트</button>
-    <div id="lottemartData" class="list"></div>
-  </div>
-  <div class="toggle-group">
-    <button class="toggle" data-mart="hanaro">하나로마트</button>
-    <div id="hanaroData" class="list"></div>
-  </div>
-</div>
+  <script>
+    /*
+    ~예시) 홈플러스 동작 흐름~
+    DOMContentLoaded 에서 이벤트가 발생하면 즉시 fetchHomeplusData 호출
+    fetch('/api/homeplusData')를 통해 서버에 요청을 보내 response.json() 데이터를 받아옴
+    받아온 데이터를 renderHomeplusData 로 전달하여 데이터를 html에 표시
+    */
 
-<script>
-/*
-~예시) 홈플러스 동작 흐름~
-DOMContentLoaded 에서 이벤트가 발생하면 즉시 fetchHomeplusData 호출
-fetch('/api/homeplusData')를 통해 서버에 요청을 보내 response.json() 데이터를 받아옴
-받아온 데이터를 renderHomeplusData 로 전달하여 데이터를 html에 표시
-*/
-
-  function renderHomeplusData(data, targetDivHomeplus) {
+    function renderHomeplusData(data, targetDivHomeplus) {
 
       // 데이터 렌더링 처리
       data.forEach(item => {
-          const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
-          promotionItem.className = "promotion-items"; // 클래스 이름 설정
+        const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
+        promotionItem.className = "promotion-items"; // 클래스 이름 설정
 
-          // 데이터 필드 추출 및 처리
-          const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
-          const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
-          const discountRate = item.discountRate ? ` (${item.discountRate})` : ''; // 할인율이 공백일 경우 괄호를 생략
-          const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
-          // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
+        // 데이터 필드 추출 및 처리
+        const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
+        const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
+        const discountRate = item.discountRate ? ` (${item.discountRate})` : ''; // 할인율이 공백일 경우 괄호를 생략
+        const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
+        // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
 
-          // 출력 텍스트 생성
-          let displayText = title; // 필수 필드: 제목
+        // 출력 텍스트 생성
+        let displayText = title; // 필수 필드: 제목
 
-          if (price) {displayText += ` / ${price}원 ${discountRate}`;} // 가격 추가
-          if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
-          // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
+        if (price) { displayText += ` / ${price}원 ${discountRate}`; } // 가격 추가
+        if (comment) { displayText += ` / ${comment}`; } // 코멘트 추가
+        // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
-          // 최종 텍스트를 div에 설정
-          promotionItem.textContent = displayText;
+        // 최종 텍스트를 div에 설정
+        promotionItem.textContent = displayText;
 
-          // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
-          targetDivHomeplus.appendChild(promotionItem);
-          
-          // 줄바꿈 태그 추가
-          const lineBreak = document.createElement('br');
-          targetDivHomeplus.appendChild(lineBreak);
+        // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
+        targetDivHomeplus.appendChild(promotionItem);
+
+        // 줄바꿈 태그 추가
+        const lineBreak = document.createElement('br');
+        targetDivHomeplus.appendChild(lineBreak);
       });
-  }
-
-  async function fetchHomeplusData(targetDivHomeplus) {
-      try {
-          // API 요청 수행
-          const response = await fetch('/api/homeplusData');
-          
-          // 응답상태 코드 및 ok상태 확인
-          // console.log("응답 상태 코드:", response.status); // HTTP 상태 코드 출력 (200, 404, etc.)
-          // console.log("response.ok:", response.ok); // 상태 코드가 200~299 사이인지 확인
-
-          if (!response.ok) {
-            throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
-          }
-
-          // 서버의 원본 응답 데이터 확인
-          const responseText = await response.text();
-          // console.log("서버 응답 데이터 (원본):", responseText);
-
-          // JSON 변환 
-          const data = responseText ? JSON.parse(responseText) : {};
-          // console.log("JSON으로 변환된 데이터:", data);
-
-          // 데이터 추출
-          const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
-          // console.log("렌더링에 사용될 데이터:", formattedData);
-
-          // 렌더링 함수 호출
-          renderHomeplusData(formattedData, targetDivHomeplus);
-      } catch (error) {
-          // 오류 처리
-          const errorMessage = document.createElement("span");
-          errorMessage.style.color = "red";
-          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
-          targetDivHomeplus.appendChild(errorMessage);
-          console.error("마트 데이터를 불러오는 중 오류 발생:", error);
-      }
-  }
-
-  function renderEmartData(data, targetDivEmart) {
-
-      // 데이터 렌더링 처리
-      data.forEach(item => {
-          const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
-          promotionItem.className = "promotion-items"; // 클래스 이름 설정
-
-          // 데이터 필드 추출 및 처리
-          const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
-          const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
-          const discountRate = item.discountRate ? ` (${item.discountRate}%)` : ''; // 할인율이 공백일 경우 괄호를 생략
-          const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
-          // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
-
-          // 출력 텍스트 생성
-          let displayText = title; // 필수 필드: 제목
-
-          if (price) {displayText += ` / ${price} ${discountRate}`;} // 가격 추가
-          // if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
-          // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
-
-          // 최종 텍스트를 div에 설정
-          promotionItem.textContent = displayText;
-
-          // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
-          targetDivEmart.appendChild(promotionItem);
-          
-          // 줄바꿈 태그 추가
-          const lineBreak = document.createElement('br');
-          targetDivEmart.appendChild(lineBreak);
-      });
-  }
-
-  async function fetchEmartData(targetDivEmart) {
-      try {
-          // API 요청 수행
-          const response = await fetch('/api/emartData');
-
-          if (!response.ok) {
-            throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
-          }
-
-          // 서버의 원본 응답 데이터 확인
-          const responseText = await response.text();
-          // console.log("서버 응답 데이터 (원본):", responseText);
-
-          // JSON 변환 
-          const data = responseText ? JSON.parse(responseText) : {};
-          // console.log("JSON으로 변환된 데이터:", data);
-
-          // 데이터 추출
-          const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
-          // console.log("렌더링에 사용될 데이터:", formattedData);
-
-          // 렌더링 함수 호출
-          renderEmartData(formattedData, targetDivEmart);
-      } catch (error) {
-          // 오류 처리
-          const errorMessage = document.createElement("span");
-          errorMessage.style.color = "red";
-          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
-          targetDivEmart.appendChild(errorMessage);
-          console.error("마트 데이터를 불러오는 중 오류 발생:", error);
-      }
-  }
-
-  function renderLottemartData(data, targetDivLottemart) {
-
-      // 데이터 렌더링 처리
-      data.forEach(item => {
-          const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
-          promotionItem.className = "promotion-items"; // 클래스 이름 설정
-
-          // 데이터 필드 추출 및 처리
-          const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
-          const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
-          // const discountRate = item.discountRate ? ` (${item.discountRate}%)` : ''; // 할인율이 공백일 경우 괄호를 생략
-          const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
-          // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
-
-          // 출력 텍스트 생성
-          let displayText = title; // 필수 필드: 제목
-
-          if (price) {displayText += ` / ${price}`;} // 가격 추가
-          if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
-          // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
-
-          // 최종 텍스트를 div에 설정
-          promotionItem.textContent = displayText;
-
-          // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
-          targetDivLottemart.appendChild(promotionItem);
-          
-          // 줄바꿈 태그 추가
-          const lineBreak = document.createElement('br');
-          targetDivLottemart.appendChild(lineBreak);
-      });
-  }
-
-  async function fetchLottemartData(targetDivLottemart) {
-      try {
-          // API 요청 수행
-          const response = await fetch('/api/lottemartData');
-
-          if (!response.ok) {
-            throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
-          }
-
-          // 서버의 원본 응답 데이터 확인
-          const responseText = await response.text();
-          // console.log("서버 응답 데이터 (원본):", responseText);
-
-          // JSON 변환 
-          const data = responseText ? JSON.parse(responseText) : {};
-          // console.log("JSON으로 변환된 데이터:", data);
-
-          // 데이터 추출
-          const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
-          // console.log("렌더링에 사용될 데이터:", formattedData);
-
-          // 렌더링 함수 호출
-          renderLottemartData(formattedData, targetDivLottemart);
-      } catch (error) {
-          // 오류 처리
-          const errorMessage = document.createElement("span");
-          errorMessage.style.color = "red";
-          errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
-          targetDivLottemart.appendChild(errorMessage);
-          console.error("마트 데이터를 불러오는 중 오류 발생:", error);
-      }
-  }
-
-
-
-  // 요일 계산 함수 (요일을 한국어로 반환)
-  function getDayInKorean(dayIndex) {
-        const daysKor = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-        return daysKor[dayIndex];
     }
 
-  // 오늘날짜 및 로딩 타이머 설정
-  function initializeDateAndTimer() {
-    // 오늘 날짜 설정
-    const today = new Date();
-    const todayTextElement = document.getElementById('todayText');
-    const dayKor = getDayInKorean(today.getDay()); // 오늘 요일 (ex: 월요일, 화요일)
-    todayTextElement.textContent = `☘️오늘 날짜: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${dayKor})`;
+    async function fetchHomeplusData(targetDivHomeplus) {
+      try {
+        // API 요청 수행
+        const response = await fetch('/api/homeplusData');
 
-    // 로딩 타이머
-    let counter = 0;
-    const loadingTimerElement = document.getElementById('loadingTimer');
-    const timerInterval = setInterval(() => {
+        // 응답상태 코드 및 ok상태 확인
+        // console.log("응답 상태 코드:", response.status); // HTTP 상태 코드 출력 (200, 404, etc.)
+        // console.log("response.ok:", response.ok); // 상태 코드가 200~299 사이인지 확인
+
+        if (!response.ok) {
+          throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
+        }
+
+        // 서버의 원본 응답 데이터 확인
+        const responseText = await response.text();
+        // console.log("서버 응답 데이터 (원본):", responseText);
+
+        // JSON 변환 
+        const data = responseText ? JSON.parse(responseText) : {};
+        // console.log("JSON으로 변환된 데이터:", data);
+
+        // 데이터 추출
+        const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
+        // console.log("렌더링에 사용될 데이터:", formattedData);
+
+        // 렌더링 함수 호출
+        renderHomeplusData(formattedData, targetDivHomeplus);
+      } catch (error) {
+        // 오류 처리
+        const errorMessage = document.createElement("span");
+        errorMessage.style.color = "red";
+        errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
+        targetDivHomeplus.appendChild(errorMessage);
+        console.error("마트 데이터를 불러오는 중 오류 발생:", error);
+      }
+    }
+
+    function renderEmartData(data, targetDivEmart) {
+
+      // 데이터 렌더링 처리
+      data.forEach(item => {
+        const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
+        promotionItem.className = "promotion-items"; // 클래스 이름 설정
+
+        // 데이터 필드 추출 및 처리
+        const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
+        const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
+        const discountRate = item.discountRate ? ` (${item.discountRate}%)` : ''; // 할인율이 공백일 경우 괄호를 생략
+        const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
+        // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
+
+        // 출력 텍스트 생성
+        let displayText = title; // 필수 필드: 제목
+
+        if (price) { displayText += ` / ${price} ${discountRate}`; } // 가격 추가
+        // if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
+        // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
+
+        // 최종 텍스트를 div에 설정
+        promotionItem.textContent = displayText;
+
+        // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
+        targetDivEmart.appendChild(promotionItem);
+
+        // 줄바꿈 태그 추가
+        const lineBreak = document.createElement('br');
+        targetDivEmart.appendChild(lineBreak);
+      });
+    }
+
+    async function fetchEmartData(targetDivEmart) {
+      try {
+        // API 요청 수행
+        const response = await fetch('/api/emartData');
+
+        if (!response.ok) {
+          throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
+        }
+
+        // 서버의 원본 응답 데이터 확인
+        const responseText = await response.text();
+        // console.log("서버 응답 데이터 (원본):", responseText);
+
+        // JSON 변환 
+        const data = responseText ? JSON.parse(responseText) : {};
+        // console.log("JSON으로 변환된 데이터:", data);
+
+        // 데이터 추출
+        const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
+        // console.log("렌더링에 사용될 데이터:", formattedData);
+
+        // 렌더링 함수 호출
+        renderEmartData(formattedData, targetDivEmart);
+      } catch (error) {
+        // 오류 처리
+        const errorMessage = document.createElement("span");
+        errorMessage.style.color = "red";
+        errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
+        targetDivEmart.appendChild(errorMessage);
+        console.error("마트 데이터를 불러오는 중 오류 발생:", error);
+      }
+    }
+
+    function renderLottemartData(data, targetDivLottemart) {
+
+      // 데이터 렌더링 처리
+      data.forEach(item => {
+        const promotionItem = document.createElement("div"); // 각 데이터 출력을 위한 div 생성
+        promotionItem.className = "promotion-items"; // 클래스 이름 설정
+
+        // 데이터 필드 추출 및 처리
+        const title = item.title || ''; // 제목이 공백일 경우 빈칸으로 처리
+        const price = item.price || ''; // 가격이 공백일 경우 빈칸으로 처리
+        // const discountRate = item.discountRate ? ` (${item.discountRate}%)` : ''; // 할인율이 공백일 경우 괄호를 생략
+        const comment = item.comment || ''; // 코멘트가 공백일 경우 생략
+        // const promotionPeriod = item.promotionPeriod || ''; // 행사 기간이 공백일 경우 생략
+
+        // 출력 텍스트 생성
+        let displayText = title; // 필수 필드: 제목
+
+        if (price) { displayText += ` / ${price}`; } // 가격 추가
+        if (comment) { displayText += ` / ${comment}`; } // 코멘트 추가
+        // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
+
+        // 최종 텍스트를 div에 설정
+        promotionItem.textContent = displayText;
+
+        // `targetDiv`에 새로운 데이터 추가 (기존 내용 유지)
+        targetDivLottemart.appendChild(promotionItem);
+
+        // 줄바꿈 태그 추가
+        const lineBreak = document.createElement('br');
+        targetDivLottemart.appendChild(lineBreak);
+      });
+    }
+
+    async function fetchLottemartData(targetDivLottemart) {
+      try {
+        // API 요청 수행
+        const response = await fetch('/api/lottemartData');
+
+        if (!response.ok) {
+          throw new Error(`네트워크 응답 실패 (상태 코드: ${response.status})`);
+        }
+
+        // 서버의 원본 응답 데이터 확인
+        const responseText = await response.text();
+        // console.log("서버 응답 데이터 (원본):", responseText);
+
+        // JSON 변환 
+        const data = responseText ? JSON.parse(responseText) : {};
+        // console.log("JSON으로 변환된 데이터:", data);
+
+        // 데이터 추출
+        const formattedData = Array.isArray(data.filteredItems) ? data.filteredItems : [];
+        // console.log("렌더링에 사용될 데이터:", formattedData);
+
+        // 렌더링 함수 호출
+        renderLottemartData(formattedData, targetDivLottemart);
+      } catch (error) {
+        // 오류 처리
+        const errorMessage = document.createElement("span");
+        errorMessage.style.color = "red";
+        errorMessage.textContent = "데이터를 불러오는 도중 문제가 발생했습니다.";
+        targetDivLottemart.appendChild(errorMessage);
+        console.error("마트 데이터를 불러오는 중 오류 발생:", error);
+      }
+    }
+
+
+
+    // 요일 계산 함수 (요일을 한국어로 반환)
+    function getDayInKorean(dayIndex) {
+      const daysKor = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+      return daysKor[dayIndex];
+    }
+
+    // 오늘날짜 및 로딩 타이머 설정
+    function initializeDateAndTimer() {
+      // 오늘 날짜 설정
+      const today = new Date();
+      const todayTextElement = document.getElementById('todayText');
+      const dayKor = getDayInKorean(today.getDay()); // 오늘 요일 (ex: 월요일, 화요일)
+      todayTextElement.textContent = `☘️오늘 날짜: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${dayKor})`;
+
+      // 로딩 타이머
+      let counter = 0;
+      const loadingTimerElement = document.getElementById('loadingTimer');
+      const timerInterval = setInterval(() => {
         counter++;
         loadingTimerElement.textContent = ` (${counter}초)`;
-    }, 1000);
+      }, 1000);
 
-    return timerInterval;
-} 
-    
-  // DOMContentLoaded 이벤트: 페이지 로드 시 실행
-  document.addEventListener('DOMContentLoaded', async () => {
+      return timerInterval;
+    }
+
+    // DOMContentLoaded 이벤트: 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', async () => {
 
       // 날짜, 타이머 호출
       const timerInterval = initializeDateAndTimer();
@@ -390,7 +391,7 @@ fetch('/api/homeplusData')를 통해 서버에 요청을 보내 response.json() 
       const loadingMessageElement = document.getElementById('loadingMsg');
       loadingMessageElement.textContent = "🔽 아래 정보를 확인해주세요.";
       clearInterval(timerInterval); // 타이머 중지
-  });
+    });
 
   </script>
 </body>

@@ -7,7 +7,7 @@ const eggKeywordsEmart = [
 ];
 
 const eggKeywordsLottemart = [
-  '행복생생란' // 롯데마트
+  '행복생생란(대란, 30입)','행복생생란 (특란, 30입)','행복한 신선판란 (대란, 30입)' // 롯데마트
 ];
 
 module.exports = {

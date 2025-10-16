@@ -1,73 +1,130 @@
-const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
+const puppeteer = require('puppeteer');
 const { eggKeywordsLottemart } = require('./EggKeywords');
 
-// 이마트 데이터를 스크래핑하는 함수
 async function scrapeLottemartData() {
     let martData = {
         lottemart: {
-            eggItems: [], // HTML로 넘길 데이터
+            eggItems: [],
             error: null,
         },
     };
 
-    // 계란으로 직접 검색
     const lottemartURL = 'https://lottemartzetta.com/products/search?q=%EA%B3%84%EB%9E%80';
 
     try {
         const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
-        page.setDefaultNavigationTimeout(0); // 기본 네비게이션 타임아웃 해제
+        page.setDefaultNavigationTimeout(0);
 
-        // 웹 페이지로 이동
-        await page.goto(lottemartURL);
+        // 초기 로드
+        await page.goto(lottemartURL, { waitUntil: 'domcontentloaded' });
 
-        // 1초 동안 대기
-        await new Promise(resolve => setTimeout(resolve, 1000)); // setTimeout이 1초뒤 완료되면 resolve가 호출(Promise 객체를 완료)
+        // 살짝 스크롤로 최소한의 lazy-load 트리거 (많이 내릴 필요 없음)
+        await page.evaluate(async () => {
+            window.scrollBy(0, window.innerHeight * 0.8);
+        });
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        // 데이터 스크래핑
+        // **핵심**: "유효한(빈 타이틀이 아닌) 아이템"이 10개 모일 때까지 대기(최대 타임아웃)
+        const maxWaitMs = 3000; // 최대 3초 대기
+        const start = Date.now();
+        while (true) {
+            const validCount = await page.$$eval('[data-test="fop-body"]', nodes => {
+                let count = 0;
+                for (const node of nodes) {
+                    // 캐러셀 안이면 제외
+                    if (node.closest('[data-test="shoppable-banner-carousel"]')) continue;
+                    // 우선 data-test 셀렉터 사용해 title 찾기
+                    const titleEl = node.querySelector('[data-test="fop-title"]') || node.querySelector('h3');
+                    const imgEl = node.querySelector('img[data-test="lazy-load-image"]');
+                    const alt = imgEl ? imgEl.getAttribute('alt') : '';
+                    const titleText = (titleEl && titleEl.textContent && titleEl.textContent.trim()) ? titleEl.textContent.trim() : (alt || '').trim();
+                    if (titleText) count++;
+                    if (count >= 10) break;
+                }
+                return count;
+            });
+
+            if (validCount >= 10) break;
+            if (Date.now() - start > maxWaitMs) break;
+            // 조금 더 기다려보고 재시도
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // 이제 안정된 상태에서 실제 데이터 수집 (최대 10개의 "유효 항목"만)
         martData.lottemart.eggItems = await page.evaluate((eggKeywordsLottemart) => {
-            const filteredItems = []; // 계란 데이터
-            const allItems = []; // 전체 원본데이터 - 확인용
+            const filteredItems = [];
+            const allItems = [];
 
-            // DOM요소를 가져와서 정보 추출
-            document.querySelectorAll('[data-test="fop-body"]').forEach(item => {
-                const title = item.querySelector('._text_cn5lb_1._text--m_cn5lb_23')?.textContent.trim() || ''; // 상품명
-                const price = item.querySelector('._display_xy0eg_1.sc-cHMHOW.ldqIzW')?.textContent.trim() || ''; // 가격
-                const comment = item.querySelector('._text--promotion_cn5lb_31')?.textContent.trim() || ''; // 코멘트
-                // const discountRate = item.querySelector('')?.textContent || ''; // 할인율
+            // NodeList -> 배열로 변환하여 순서 보장
+            const nodes = Array.from(document.querySelectorAll('[data-test="fop-body"]'));
 
-                // 원본 데이터를 저장
+            for (const node of nodes) {
+                // 캐러셀(배너) 영역 상품은 제외
+                if (node.closest('[data-test="shoppable-banner-carousel"]')) continue;
+
+                // 먼저 '공식' 셀렉터로 시도 (더 안정적)
+                let title = (node.querySelector('[data-test="fop-title"]')?.textContent || '').trim();
+                // 대체: h3, 링크 텍스트, img.alt 등
+                if (!title) {
+                    title = (node.querySelector('h3')?.textContent || '').trim();
+                }
+                if (!title) {
+                    title = (node.querySelector('[data-test="fop-product-link"]')?.textContent || '').trim();
+                }
+                if (!title) {
+                    title = (node.querySelector('img[data-test="lazy-load-image"]')?.getAttribute('alt') || '').trim();
+                }
+
+                // price도 안정적 셀렉터 사용
+                let price = (node.querySelector('[data-test="fop-price"]')?.textContent || '').trim();
+                // fallback: 특정 클래스(없으면 빈 문자열)
+                if (!price) {
+                    price = (node.querySelector('._display_xy0eg_1')?.textContent || '').trim();
+                }
+
+                // promotion/comment
+                let comment = (node.querySelector('[data-test="fop-offer-text"]')?.textContent || '').trim();
+                if (!comment) comment = (node.querySelector('._text--promotion_cn5lb_31')?.textContent || '').trim() || '';
+
+                // skip empty titles (중요)
+                if (!title) continue;
+
+                // allItems에는 순서대로 유효 항목만 넣고, 10개까지만 수집
                 allItems.push({ title, price, comment });
-                // allItems.push({ title, discountRate, price, comment });
+                if (allItems.length >= 10) break;
 
                 // 계란 관련 상품 필터링
-                const isEgg = new RegExp(eggKeywordsLottemart.join('|')).test(title);
-                console.log(isEgg);
+                const regex = new RegExp(
+                    eggKeywordsLottemart
+                        .filter(k => k) // 빈 문자열 제거
+                        .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) // 특수문자 escape
+                        .join('|'), 
+                    'i' // 대소문자 무시
+                );
+                const isEgg = regex.test(title);
+                // console.log(isEgg);
 
                 // 조건 충족 시 데이터 추가
                 if (isEgg) {
-                    // `filteredItems`에 중복된 `title`이 있을 경우 추가하지 않음
-                    const alreadyExists = filteredItems.some(item => item.title === title);
-                    if (!alreadyExists) {
-                        filteredItems.push({ title, price, comment });
-                    }
+                    filteredItems.push({ title, price, comment });
                 }
-            });
-
+            }
             return { allItems, filteredItems };
         }, eggKeywordsLottemart);
 
-            // console.log("=== 원본 상품 데이터 ===");
-            // console.log(martData.lottemart.eggItems.allItems);
+        // console.log("=== 원본 상품 데이터 (최대 10개, 유효 항목만) ===");
+        // console.log(martData.lottemart.eggItems.allItems);
 
-            // console.log("=== 롯데마트 최종 필터링된 데이터 ===");
-            // console.log(martData.lottemart.eggItems.filteredItems);
+        // console.log("=== 롯데마트 필터링된 데이터 ===");
+        // console.log(martData.lottemart.eggItems.filteredItems);
 
-        await browser.close(); // 브라우저 닫기
+        await browser.close();
     } catch (error) {
         console.error('롯데마트 데이터 불러오기 실패:', error);
         martData.lottemart.error = '데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
     }
+
     return martData;
 }
 
