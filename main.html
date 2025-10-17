@@ -51,12 +51,6 @@
       font-weight: 600;
     }
 
-    .hr2 {
-      margin: 20px 0;
-      border: none;
-      border-top: 1px solid #ddd;
-    }
-
     .toggles {
       display: grid;
       grid-template-columns: 1fr;
@@ -109,6 +103,43 @@
       margin: 9px 0;
       font-weight: bold;
     }
+
+    .price-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 25px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .price-title {
+      text-align: center;
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .price-item {
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .price-label {
+      font-weight: bold;
+      width: 80px;
+      color: #555;
+    }
+
+    .price-value {
+      flex: 1;
+      font-size: 16px;
+      background-color: #fff;
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
   </style>
 </head>
 
@@ -134,6 +165,22 @@
       <div id="lottemartData" class="list"></div>
     </div>
   </div>
+  <br>
+  <hr>
+  <br>
+  <div class="price-container">
+    <h1 class="price-title">오늘의 최저가는?</h1>
+
+    <div class="price-item">
+      <span class="price-label">대란:</span>
+      <p id="lowProductMiddleEgg" class="price-value"></p>
+    </div>
+
+    <div class="price-item">
+      <span class="price-label">특란:</span>
+      <p id="lowProductBigEgg" class="price-value"></p>
+    </div>
+  </div>
 
   <script>
     /*
@@ -142,6 +189,8 @@
     fetch('/api/homeplusData')를 통해 서버에 요청을 보내 response.json() 데이터를 받아옴
     받아온 데이터를 renderHomeplusData 로 전달하여 데이터를 html에 표시
     */
+
+    const allItems = []; // 값 비교를 위한 전체 데이터 모음
 
     function renderHomeplusData(data, targetDivHomeplus) {
 
@@ -163,6 +212,8 @@
         if (price) { displayText += ` / ${price}원 ${discountRate}`; } // 가격 추가
         if (comment) { displayText += ` / ${comment}`; } // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
+
+        allItems.push({ mart: "홈플러스", title, price }); // 값 비교를 위한 전체 데이터 모으기
 
         // 최종 텍스트를 div에 설정
         promotionItem.textContent = displayText;
@@ -234,6 +285,8 @@
         // if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
+        allItems.push({ mart: "이마트", title, price }); // 값 비교를 위한 전체 데이터 모으기
+
         // 최종 텍스트를 div에 설정
         promotionItem.textContent = displayText;
 
@@ -300,6 +353,8 @@
         if (comment) { displayText += ` / ${comment}`; } // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
+        allItems.push({ mart: "롯데마트", title, price }); // 값 비교를 위한 전체 데이터 모으기
+
         // 최종 텍스트를 div에 설정
         promotionItem.textContent = displayText;
 
@@ -346,7 +401,6 @@
     }
 
 
-
     // 요일 계산 함수 (요일을 한국어로 반환)
     function getDayInKorean(dayIndex) {
       const daysKor = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
@@ -372,6 +426,31 @@
       return timerInterval;
     }
 
+    // 전체 상품 가격 비교해서 최저가 찾기
+    function getLowestPriceProducts(products, keyword) {
+      // 필터링된 데이터
+      const filteredProducts = products.filter(product => product.title.includes(keyword));
+
+      // 최저가 제품 찾기
+      const lowestProduct = filteredProducts.reduce((min, item) => {
+        const price = parseInt(item.price.replace(/[^0-9]/g, ''), 10); // 숫자 추출
+        const minPrice = parseInt(min.price.replace(/[^0-9]/g, ''), 10);
+
+        return price < minPrice ? item : min;
+      });
+
+      return lowestProduct; // 최저가 제품 반환
+    }
+
+    // HTML 요소에 값을 업데이트하는 함수
+    function updateHTMLElement(elementId, product) {
+      // 지정된 HTML 요소에 텍스트 업데이트
+      const element = document.getElementById(elementId);
+      if (element && product) {
+        element.textContent = `${product.mart} : ${product.title} / ${product.price}`;
+      }
+    }
+
     // DOMContentLoaded 이벤트: 페이지 로드 시 실행
     document.addEventListener('DOMContentLoaded', async () => {
 
@@ -387,6 +466,17 @@
       await fetchHomeplusData(targetDivHomeplus);
       await fetchEmartData(targetDivEmart);
       await fetchLottemartData(targetDivLottemart);
+
+      // console.log('--확인용--');
+      // console.log(allItems);
+
+      // 최저가 제품 찾기
+      const lowestMiddleEgg = getLowestPriceProducts(allItems, "대란"); // 대란
+      const lowestBigEgg = getLowestPriceProducts(allItems, "특란");   // 특란
+
+      // 값 업데이트
+      updateHTMLElement("lowProductMiddleEgg", lowestMiddleEgg);
+      updateHTMLElement("lowProductBigEgg", lowestBigEgg);
 
       const loadingMessageElement = document.getElementById('loadingMsg');
       loadingMessageElement.textContent = "🔽 아래 정보를 확인해주세요.";

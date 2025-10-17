@@ -53,7 +53,7 @@ async function scrapeHomeplusData() {
 
                 // 계란 관련 상품 필터링
                 const isEgg = new RegExp(eggKeywordsHomeplus.join('|')).test(title);
-                console.log(isEgg);
+                // console.log(isEgg);
 
                 // 조건 충족 시 데이터 추가
                 if (isEgg) {
