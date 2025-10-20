@@ -1,4 +1,6 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
+const puppeteer = require('puppeteer-core');
+const executablePath = process.env.CHROMIUM_PATH || null;
 const { eggKeywordsLottemart } = require('./EggKeywords');
 
 async function scrapeLottemartData() {
@@ -12,7 +14,14 @@ async function scrapeLottemartData() {
     const lottemartURL = 'https://lottemartzetta.com/products/search?q=%EA%B3%84%EB%9E%80%2030%EA%B5%AC';
 
     try {
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await puppeteer.launch({ 
+            executablePath: executablePath,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+            ],
+            headless: 'new'
+        });
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(0);
 
