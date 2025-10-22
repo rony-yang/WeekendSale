@@ -1,6 +1,7 @@
 // const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
 const puppeteer = require('puppeteer-core');
-const executablePath = process.env.CHROMIUM_PATH || null;
+const { findChromePath } = require('./chromePath');
+const executablePath = findChromePath();
 const { eggKeywordsHomeplus } = require('./EggKeywords');
 
 // 홈플러스 데이터를 스크래핑하는 함수
@@ -21,6 +22,7 @@ async function scrapeHomeplusData() {
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
             ],
             headless: 'new'
         });

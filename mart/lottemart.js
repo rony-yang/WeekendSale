@@ -1,6 +1,8 @@
 // const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
 const puppeteer = require('puppeteer-core');
-const executablePath = process.env.CHROMIUM_PATH || null;
+const { findChromePath } = require('./chromePath');
+const executablePath = findChromePath();
+
 const { eggKeywordsLottemart } = require('./EggKeywords');
 
 async function scrapeLottemartData() {
@@ -19,6 +21,7 @@ async function scrapeLottemartData() {
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
             ],
             headless: 'new'
         });

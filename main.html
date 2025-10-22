@@ -103,43 +103,52 @@
       margin: 9px 0;
       font-weight: bold;
     }
+/* 컨테이너 초기화 */
+.container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px;
+  padding: 20px;
+}
 
-    .price-container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 25px;
-      background-color: #f9f9f9;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
+/* 각각의 절반 섹션 스타일 */
+.half-section {
+  flex: 1;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
-    .price-title {
-      text-align: center;
-      font-size: 20px;
-      color: #333;
-      margin-bottom: 20px;
-    }
+/* 최저가 강조 스타일 */
+.highlight {
+  font-weight: bold;
+  color: #0d64c7;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
 
-    .price-item {
-      display: flex;
-      align-items: center;
-      font-size: 18px;
-    }
+/* 리스트 스타일 */
+.product-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+}
 
-    .price-label {
-      font-weight: bold;
-      width: 80px;
-      color: #555;
-    }
+.product-list li {
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
 
-    .price-value {
-      flex: 1;
-      font-size: 16px;
-      background-color: #fff;
-      padding: 5px 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
+.product-list li:nth-child(odd) {
+  background-color: #f3f3f3;
+}
+
   </style>
 </head>
 
@@ -168,17 +177,20 @@
   <br>
   <hr>
   <br>
-  <div class="price-container">
-    <h1 class="price-title">오늘의 최저가는?</h1>
 
-    <div class="price-item">
-      <span class="price-label">대란:</span>
-      <p id="lowProductMiddleEgg" class="price-value"></p>
+  <div class="container">
+    <!-- 왼쪽 영역: 대란 -->
+    <div class="half-section" id="left-section">
+      <h2>대란</h2>
+      <p class="highlight">최저가👉 <span id="lowProductMiddleEgg"></span></p>
+      <ul id="middleEggList" class="product-list"></ul>
     </div>
 
-    <div class="price-item">
-      <span class="price-label">특란:</span>
-      <p id="lowProductBigEgg" class="price-value"></p>
+    <!-- 오른쪽 영역: 특란 -->
+    <div class="half-section" id="right-section">
+      <h2>특란</h2>
+      <p class="highlight">최저가👉 <span id="lowProductBigEgg"></span></p>
+      <ul id="BigEggList" class="product-list"></ul>
     </div>
   </div>
 
@@ -427,19 +439,57 @@
     }
 
     // 전체 상품 가격 비교해서 최저가 찾기
-    function getLowestPriceProducts(products, keyword) {
-      // 필터링된 데이터
-      const filteredProducts = products.filter(product => product.title.includes(keyword));
+    function displayLowestPriceProducts(products, isSpecial, lowProductId, listId) {
+      // "특란" 또는 "특" 포함 여부에 따라 상품 필터링
+      const filteredProducts = products.filter(product => {
+        const title = product.title || "";
 
-      // 최저가 제품 찾기
-      const lowestProduct = filteredProducts.reduce((min, item) => {
-        const price = parseInt(item.price.replace(/[^0-9]/g, ''), 10); // 숫자 추출
-        const minPrice = parseInt(min.price.replace(/[^0-9]/g, ''), 10);
-
-        return price < minPrice ? item : min;
+        if (isSpecial) {
+          // "특"이나 "특란" 포함된 상품
+          return title.includes("특란") || title.includes("특");
+        } else {
+          // "특"이나 "특란"이 포함되지 않은 상품 (즉, 대란)
+          return !title.includes("특란") && !title.includes("특");
+        }
       });
 
-      return lowestProduct; // 최저가 제품 반환
+      // console.log(`${isSpecial ? "[특란]" : "[대란]"} 필터 결과: ${filteredProducts.length}개`);
+      // filteredProducts.forEach(p => console.log(`  - ${p.mart} | ${p.title} | ${p.price}`));
+
+      // 필터링된 상품이 없을 경우
+      if (filteredProducts.length === 0) {
+        console.warn(`${isSpecial ? "특란" : "대란"} 관련 상품이 없습니다.`);
+        document.getElementById(lowProductId).textContent = "상품 없음";
+        return;
+      }
+
+      // 가격 기준으로 오름차순 정렬
+      const sortedProducts = filteredProducts.sort((a, b) => {
+        const priceA = parseInt(a.price.replace(/[^0-9]/g, ''), 10);
+        const priceB = parseInt(b.price.replace(/[^0-9]/g, ''), 10);
+        return priceA - priceB;
+      });
+
+      // "홈플러스" 상품의 가격만 표시 형식 수정
+      sortedProducts.forEach(product => {
+        // 가격 문자열에서 숫자만 추출
+        const numericPrice = parseInt(product.price.replace(/[^0-9]/g, ''), 10);
+
+        // 조건: "홈플러스" 상품에 대해 적용
+        if (product.mart === "홈플러스") {
+          // 3자리마다 쉼표 추가 및 "원" 붙이기
+          product.price = `${numericPrice.toLocaleString()}원`;
+        }
+      });
+
+      // 최저가 상품 (첫 번째 항목)
+      const lowestProduct = sortedProducts[0];
+
+      // 최저가 상품 HTML 업데이트
+      updateHTMLElement(lowProductId, lowestProduct);
+
+      // 목록에 정렬된 상품들 출력
+      appendProductsList(listId, sortedProducts);
     }
 
     // HTML 요소에 값을 업데이트하는 함수
@@ -447,8 +497,19 @@
       // 지정된 HTML 요소에 텍스트 업데이트
       const element = document.getElementById(elementId);
       if (element && product) {
-        element.textContent = `${product.mart} : ${product.title} / ${product.price}`;
+        element.textContent = `[${product.mart}] ${product.title} / ${product.price}`;
       }
+    }
+
+    function appendProductsList(listId, products) {
+      const listElement = document.getElementById(listId);
+      listElement.innerHTML = ""; // 기존 내용 초기화
+
+      products.forEach(product => {
+        const listItem = document.createElement("li");
+        listItem.textContent = `[${product.mart}] ${product.title} / ${product.price}`;
+        listElement.appendChild(listItem);
+      });
     }
 
     // DOMContentLoaded 이벤트: 페이지 로드 시 실행
@@ -470,13 +531,11 @@
       // console.log('--확인용--');
       // console.log(allItems);
 
-      // 최저가 제품 찾기
-      const lowestMiddleEgg = getLowestPriceProducts(allItems, "대란"); // 대란
-      const lowestBigEgg = getLowestPriceProducts(allItems, "특란");   // 특란
+      // 대란 정보 표시
+      displayLowestPriceProducts(allItems, false, "lowProductMiddleEgg", "middleEggList");
 
-      // 값 업데이트
-      updateHTMLElement("lowProductMiddleEgg", lowestMiddleEgg);
-      updateHTMLElement("lowProductBigEgg", lowestBigEgg);
+      // 특란 정보 표시
+      displayLowestPriceProducts(allItems, true, "lowProductBigEgg", "BigEggList");
 
       const loadingMessageElement = document.getElementById('loadingMsg');
       loadingMessageElement.textContent = "🔽 아래 정보를 확인해주세요.";
