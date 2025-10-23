@@ -43,7 +43,7 @@ async function scrapeEmartData() {
             // DOM요소를 가져와서 정보 추출
             document.querySelectorAll('.chakra-link.css-1umjy1n').forEach(item => {
                 const title = item.querySelector('.css-1mrk1dy')?.textContent || ''; // 상품명
-                const discountRate = item.querySelector('.css-1pvxl37.css-idkz9h')?.nextSibling?.textContent.trim() || ''; // 할인율
+                const discountRate = item.querySelector('.css-1pvxl37')?.childNodes[1]?.textContent.trim() || ''; // 할인율
                 const priceRaw = item?.querySelector('.css-1fdb1oo')?.textContent.trim() || ''; // 원본 값
                 const price = priceRaw.replace('판매가격', '').trim(); // "판매가격" 제거 및 공백 제거
                 const comment = item.querySelector('.css-8uhtka')?.textContent || ''; // 코멘트
