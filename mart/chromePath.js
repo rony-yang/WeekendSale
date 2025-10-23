@@ -40,16 +40,10 @@ function findChromePath() {
   }
 
   // 4. 실패 시 에러 안내
-  throw new Error(`
+throw new Error(`
 ❌ Chrome executable not found.
-Please install Google Chrome or set CHROMIUM_PATH environment variable.
-
-예시:
-  macOS/Linux:
-    export CHROMIUM_PATH="/usr/bin/google-chrome"
-  Windows (PowerShell):
-    $env:CHROMIUM_PATH="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-  `);
+Checked paths: ${process.env.CHROMIUM_PATH}
+`);
 }
 
 // 5. 외부에서 import 가능하게 export
