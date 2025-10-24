@@ -1,9 +1,7 @@
-// const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
 const puppeteer = require('puppeteer-core');
 const { findChromePath } = require('./chromePath');
 const executablePath = findChromePath();
-
-const { eggKeywordsLottemart } = require('../EggKeywords');
+const { eggKeywordsLottemart } = require('./EggKeywords');
 
 async function scrapeLottemartData() {
     let martData = {

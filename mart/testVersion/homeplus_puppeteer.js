@@ -1,5 +1,4 @@
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
+const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
 const { eggKeywordsHomeplus } = require('./EggKeywords');
 
 // 홈플러스 데이터를 스크래핑하는 함수
@@ -13,17 +12,15 @@ async function scrapeHomeplusData() {
 
     // 계란으로 직접 검색
     const homeplusURL = 'https://mfront.homeplus.co.kr/search?entry=direct&keyword=%EA%B3%84%EB%9E%80%2030%EA%B5%AC';
-    let browser;
 
     try {
-    browser = await puppeteer.launch({ 
-            // @sparticuz/chromium이 제공하는 경로와 설정을 사용
-            executablePath: await chromium.executablePath(),
-            args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-            defaultViewport: chromium.defaultViewport,
-            headless: chromium.headless,
+        const browser = await puppeteer.launch({ 
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+            ],
+            headless: true
         });
-
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(0); // 기본 네비게이션 타임아웃 해제
 
@@ -51,7 +48,6 @@ async function scrapeHomeplusData() {
 
                 // 계란 관련 상품 필터링
                 const isEgg = new RegExp(eggKeywordsHomeplus.join('|')).test(title);
-                // console.log(isEgg);
 
                 // 조건 충족 시 데이터 추가
                 if (isEgg) {
@@ -66,8 +62,8 @@ async function scrapeHomeplusData() {
             // console.log("=== 원본 상품 데이터 ===");
             // console.log(martData.homeplus.eggItems.allItems);
 
-            console.log("=== 최종 필터링된 데이터 ===");
-            console.log(martData.homeplus.eggItems.filteredItems);
+            // console.log("=== 최종 필터링된 데이터 ===");
+            // console.log(martData.homeplus.eggItems.filteredItems);
 
         await browser.close(); // 브라우저 닫기
     } catch (error) {

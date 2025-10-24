@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
+const { findChromePath } = require('./chromePath');
+const executablePath = findChromePath();
 const { eggKeywordsEmart } = require('./EggKeywords');
 
 // 이마트 데이터를 스크래핑하는 함수
@@ -13,17 +14,17 @@ async function scrapeEmartData() {
 
     // 계란으로 직접 검색
     const emartURL = 'https://emart.ssg.com/search.ssg?query=%EA%B3%84%EB%9E%80%2030%EA%B5%AC';
-    let browser;
 
     try {
-        browser = await puppeteer.launch({ 
-            // @sparticuz/chromium이 제공하는 경로와 설정을 사용
-            executablePath: await chromium.executablePath(),
-            args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-            defaultViewport: chromium.defaultViewport,
-            headless: chromium.headless,
+        const browser = await puppeteer.launch({ 
+            executablePath: executablePath,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+            ],
+            headless: 'new'
         });
-        
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(0); // 기본 네비게이션 타임아웃 해제
 

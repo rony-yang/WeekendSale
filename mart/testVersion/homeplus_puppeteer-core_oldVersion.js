@@ -1,5 +1,3 @@
-// puppeteer-core를 사용하는 방법
-
 const puppeteer = require('puppeteer-core');
 const { findChromePath } = require('./chromePath');
 const executablePath = findChromePath();
