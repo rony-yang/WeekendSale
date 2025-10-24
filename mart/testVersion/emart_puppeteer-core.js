@@ -1,5 +1,8 @@
-const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
-const { eggKeywordsEmart } = require('./EggKeywords');
+// const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
+const puppeteer = require('puppeteer-core');
+const { findChromePath } = require('./chromePath');
+const executablePath = findChromePath();
+const { eggKeywordsEmart } = require('../EggKeywords');
 
 // 이마트 데이터를 스크래핑하는 함수
 async function scrapeEmartData() {
@@ -15,11 +18,13 @@ async function scrapeEmartData() {
 
     try {
         const browser = await puppeteer.launch({ 
+            executablePath: executablePath,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
             ],
-            headless: true
+            headless: 'new'
         });
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(0); // 기본 네비게이션 타임아웃 해제

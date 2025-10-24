@@ -1,10 +1,15 @@
+/*
+서버에서 데이터를 API로 제공하고, 클라이언트에서 데이터를 받아 html로 렌더링 하는 구조
+puppeteer 없이 사용 가능
+*/
+
 const express = require('express');
 const path = require('path');
 const app = express();
 // const PORT = 3000;
 const PORT = process.env.PORT || 3000;
 
-const { scrapeHomeplusData } = require('./mart/homeplus2');
+const { scrapeHomeplusData } = require('./mart/homeplus');
 const { scrapeEmartData } = require('./mart/emart');
 const { scrapeLottemartData } = require('./mart/lottemart');
 // const { scrapeHomeplusData } = require('./mart/hanaro');

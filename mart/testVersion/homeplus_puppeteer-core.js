@@ -1,8 +1,9 @@
-// const puppeteer = require('puppeteer'); // 웹스크래핑과 자동화를 제공하는 도구. 헤드리스 모드 사용
+// puppeteer-core를 사용하는 방법
+
 const puppeteer = require('puppeteer-core');
 const { findChromePath } = require('./chromePath');
 const executablePath = findChromePath();
-const { eggKeywordsHomeplus } = require('./EggKeywords');
+const { eggKeywordsHomeplus } = require('../EggKeywords');
 
 // 홈플러스 데이터를 스크래핑하는 함수
 async function scrapeHomeplusData() {
@@ -34,13 +35,6 @@ async function scrapeHomeplusData() {
 
         // 1초 동안 대기
         await new Promise(resolve => setTimeout(resolve, 1000)); // setTimeout이 1초뒤 완료되면 resolve가 호출(Promise 객체를 완료)
-
-        // 오늘 날짜를 YYYY-MM-DD 형식으로 변환
-        // const todayDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식 가져오기
-
-        // console.log('martData.homeplus.promotionPeriod:', martData.homeplus.promotionPeriod); // 행사 기간
-        // console.log('todayDate:', todayDate); // 오늘 날짜
-        // console.log('eggKeywords:', eggKeywords); // 계란 키워드 배열
 
         // 홈플러스 데이터 스크래핑
         martData.homeplus.eggItems = await page.evaluate((eggKeywordsHomeplus) => {
@@ -75,8 +69,8 @@ async function scrapeHomeplusData() {
             // console.log("=== 원본 상품 데이터 ===");
             // console.log(martData.homeplus.eggItems.allItems);
 
-            // console.log("=== 최종 필터링된 데이터 ===");
-            // console.log(martData.homeplus.eggItems.filteredItems);
+            console.log("=== 최종 필터링된 데이터 ===");
+            console.log(martData.homeplus.eggItems.filteredItems);
 
         await browser.close(); // 브라우저 닫기
     } catch (error) {
