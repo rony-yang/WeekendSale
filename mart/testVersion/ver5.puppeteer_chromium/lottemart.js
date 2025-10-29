@@ -1,4 +1,5 @@
-const { chromium } = require('playwright');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const { eggKeywordsLottemart } = require('./EggKeywords');
 
 async function scrapeLottemartData() {
@@ -13,21 +14,19 @@ async function scrapeLottemartData() {
     let browser;
 
     try {
-        // Playwright 크로미움 브라우저 실행
-        browser = await chromium.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        browser = await puppeteer.launch({ 
+            // @sparticuz/chromium이 제공하는 경로와 설정을 사용
+            executablePath: await chromium.executablePath(),
+            args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+            defaultViewport: chromium.defaultViewport,
+            headless: chromium.headless,
         });
-
+        
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(0);
 
-        // 페이지 접속
-        await page.goto(lottemartURL, { waitUntil: 'networkidle' });
-
-        // JS 렌더링이 끝날 때까지 1초 대기 (추가 안정성)
-        await page.waitForTimeout(1000);
-
+        // 초기 로드
+        await page.goto(lottemartURL, { waitUntil: 'domcontentloaded' });
 
         // 살짝 스크롤로 최소한의 lazy-load 트리거 (많이 내릴 필요 없음)
         await page.evaluate(async () => {
@@ -62,7 +61,7 @@ async function scrapeLottemartData() {
         }
 
         // 이제 안정된 상태에서 실제 데이터 수집 (최대 10개의 "유효 항목"만)
-        const result = await page.evaluate((eggKeywordsLottemart) => {
+        martData.lottemart.eggItems = await page.evaluate((eggKeywordsLottemart) => {
             const filteredItems = [];
             const allItems = [];
 
@@ -109,7 +108,7 @@ async function scrapeLottemartData() {
                     eggKeywordsLottemart
                         .filter(k => k) // 빈 문자열 제거
                         .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) // 특수문자 escape
-                        .join('|'),
+                        .join('|'), 
                     'i' // 대소문자 무시
                 );
                 const isEgg = regex.test(title);
@@ -123,20 +122,16 @@ async function scrapeLottemartData() {
             return { allItems, filteredItems };
         }, eggKeywordsLottemart);
 
-        martData.lottemart.eggItems = result.filteredItems;
-        // console.log("=== 원본 상품 데이터 ===");
-        // console.log(result.allItems);
+        // console.log("=== 원본 상품 데이터 (최대 10개, 유효 항목만) ===");
+        // console.log(martData.lottemart.eggItems.allItems);
 
-        // console.log("=== 롯데마트 필터링된 데이터 ===");
-        // console.log(result.filteredItems);
+        console.log("=== 롯데마트 필터링된 데이터 ===");
+        console.log(martData.lottemart.eggItems.filteredItems);
 
         await browser.close();
     } catch (error) {
         console.error('롯데마트 데이터 불러오기 실패:', error);
         martData.lottemart.error = '데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
-
-        // 예외 발생 시 브라우저 안전 종료
-        if (browser) await browser.close();
     }
 
     return martData;

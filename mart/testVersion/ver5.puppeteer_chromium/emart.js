@@ -1,4 +1,5 @@
-const { chromium } = require('playwright');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const { eggKeywordsEmart } = require('./EggKeywords');
 
 // 이마트 데이터를 스크래핑하는 함수
@@ -15,33 +16,35 @@ async function scrapeEmartData() {
     let browser;
 
     try {
-        // Playwright 크로미움 브라우저 실행
-        browser = await chromium.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        browser = await puppeteer.launch({ 
+            // @sparticuz/chromium이 제공하는 경로와 설정을 사용
+            executablePath: await chromium.executablePath(),
+            args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+            defaultViewport: chromium.defaultViewport,
+            headless: chromium.headless,
         });
         
         const page = await browser.newPage();
         page.setDefaultNavigationTimeout(0); // 기본 네비게이션 타임아웃 해제
 
-        // 페이지 접속
-        await page.goto(emartURL, { waitUntil: 'networkidle' });
+        // 웹 페이지로 이동
+        await page.goto(emartURL);
 
-        // JS 렌더링이 끝날 때까지 1초 대기 (추가 안정성)
-        await page.waitForTimeout(1000);
+        // 1초 동안 대기
+        await new Promise(resolve => setTimeout(resolve, 1000)); // setTimeout이 1초뒤 완료되면 resolve가 호출(Promise 객체를 완료)
 
-        // Playwright의 evaluate로 페이지 내부에서 데이터 추출
-        const result = await page.evaluate((eggKeywordsEmart) => {
+        // 데이터 스크래핑
+        martData.emart.eggItems = await page.evaluate((eggKeywordsEmart) => {
             const filteredItems = []; // 계란 데이터
             const allItems = []; // 전체 원본데이터 - 확인용
 
             // DOM요소를 가져와서 정보 추출
             document.querySelectorAll('.chakra-link.css-1umjy1n').forEach(item => {
                 const title = item.querySelector('.css-1mrk1dy')?.textContent || ''; // 상품명
-                const discountRate = item.querySelector('.css-aywnvu')?.textContent.trim() || ''; // 할인율
-                const priceRaw = item.querySelector('.css-1oiygnj')?.textContent.trim() || ''; // 원본 값
+                const discountRate = item.querySelector('.css-1pvxl37')?.childNodes[1]?.textContent.trim() || ''; // 할인율
+                const priceRaw = item?.querySelector('.css-1fdb1oo')?.textContent.trim() || ''; // 원본 값
                 const price = priceRaw.replace('판매가격', '').trim(); // "판매가격" 제거 및 공백 제거
-                const comment = item.querySelector('.css-why9nc')?.textContent.trim() || ''; // 코멘트
+                const comment = item.querySelector('.css-8uhtka')?.textContent || ''; // 코멘트
 
                 // 원본 데이터를 저장
                 allItems.push({ title, discountRate, price, comment });
@@ -59,20 +62,16 @@ async function scrapeEmartData() {
             return { allItems, filteredItems };
         }, eggKeywordsEmart);
 
-        martData.emart.eggItems = result.filteredItems;
             // console.log("=== 원본 상품 데이터 ===");
-            // console.log(result.allItems);
+            // console.log(martData.emart.eggItems.allItems);
 
-            // console.log("=== 이마트 최종 필터링된 데이터 ===");
-            // console.log(result.filteredItems);
+            console.log("=== 이마트 최종 필터링된 데이터 ===");
+            console.log(martData.emart.eggItems.filteredItems);
 
         await browser.close(); // 브라우저 닫기
     } catch (error) {
         console.error('이마트 데이터 불러오기 실패:', error);
         martData.emart.error = '데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
-
-        // 예외 발생 시 브라우저 안전 종료
-        if (browser) await browser.close();
     }
     return martData;
 }
