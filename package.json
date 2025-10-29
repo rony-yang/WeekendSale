@@ -14,8 +14,5 @@
   "dependencies": {
     "express": "^5.1.0",
     "playwright": "^1.56.1"
-  },
-  "devDependencies": {
-    "@sparticuz/chromium": "^122.0.0"
   }
 }
