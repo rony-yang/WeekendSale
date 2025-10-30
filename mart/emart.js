@@ -1,80 +1,65 @@
-const { chromium } = require('playwright');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const { eggKeywordsEmart } = require('./EggKeywords');
 
-// 이마트 데이터를 스크래핑하는 함수
+// 이마트 데이터를 ScrapingBee로 스크래핑하는 함수
 async function scrapeEmartData() {
-    let martData = {
-        emart: {
-            eggItems: [], // HTML로 넘길 데이터
-            error: null,
-        },
-    };
+  let martData = {
+    emart: {
+      eggItems: [],
+      error: null,
+    },
+  };
 
-    // 계란으로 직접 검색
-    const emartURL = 'https://emart.ssg.com/search.ssg?query=%EA%B3%84%EB%9E%80%2030%EA%B5%AC';
-    let browser;
+  const emartURL = 'https://emart.ssg.com/search.ssg?query=%EA%B3%84%EB%9E%80%2030%EA%B5%AC';
 
-    try {
-        // Playwright 크로미움 브라우저 실행
-        browser = await chromium.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-        });
-        
-        const page = await browser.newPage();
-        page.setDefaultNavigationTimeout(0); // 기본 네비게이션 타임아웃 해제
+  try {
+    const API_URL = 'https://app.scrapingbee.com/api/v1';
 
-        // 페이지 접속
-        await page.goto(emartURL, { waitUntil: 'networkidle' });
+    // ScrapingBee API로 JS 렌더링된 HTML 가져오기
+    const { data: html } = await axios.get(API_URL, {
+      params: {
+        api_key: process.env.SCRAPINGBEE_KEY, // Render 환경 변수
+        url: emartURL,
+        render_js: true, // JS 렌더링 결과 포함
+      },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      },
+    });
 
-        // JS 렌더링이 끝날 때까지 1초 대기 (추가 안정성)
-        await page.waitForTimeout(1000);
+    // HTML 파싱
+    const $ = cheerio.load(html);
+    const filteredItems = [];
 
-        // Playwright의 evaluate로 페이지 내부에서 데이터 추출
-        const result = await page.evaluate((eggKeywordsEmart) => {
-            const filteredItems = []; // 계란 데이터
-            const allItems = []; // 전체 원본데이터 - 확인용
+    $('.chakra-link.css-1umjy1n').each((i, el) => {
+      const title = $(el).find('.css-1mrk1dy').text().trim() || ''; // 상품명
+      const discountRate = $(el).find('.css-aywnvu').text().trim() || ''; // 할인율
+      const priceRaw = $(el).find('.css-1oiygnj').text().trim() || '';
+      const price = priceRaw
+        .replace('판매가격', '') // "판매가격" 문자열 제거
+        .trim()
+        .replace(/,/g, '') // 기존 쉼표 제거
+        .replace(/\d+/, (match) => Number(match).toLocaleString()); // 숫자 변환 후 포맷
+      const comment = $(el).find('.css-why9nc').text().trim() || ''; // 코멘트
 
-            // DOM요소를 가져와서 정보 추출
-            document.querySelectorAll('.chakra-link.css-1umjy1n').forEach(item => {
-                const title = item.querySelector('.css-1mrk1dy')?.textContent || ''; // 상품명
-                const discountRate = item.querySelector('.css-aywnvu')?.textContent.trim() || ''; // 할인율
-                const priceRaw = item.querySelector('.css-1oiygnj')?.textContent.trim() || ''; // 원본 값
-                const price = priceRaw.replace('판매가격', '').trim(); // "판매가격" 제거 및 공백 제거
-                const comment = item.querySelector('.css-why9nc')?.textContent.trim() || ''; // 코멘트
+      // 계란 관련 상품만 필터링
+      const isEgg = new RegExp(eggKeywordsEmart.join('|')).test(title);
+      if (isEgg) {
+        filteredItems.push({ title, discountRate, price, comment });
+      }
+    });
 
-                // 원본 데이터를 저장
-                allItems.push({ title, discountRate, price, comment });
+    martData.emart.eggItems = filteredItems;
 
-                // 계란 관련 상품 필터링
-                const isEgg = new RegExp(eggKeywordsEmart.join('|')).test(title);
-                // console.log(isEgg);
+    console.log('=== 이마트 최종 필터링된 데이터 ===');
+    console.log(filteredItems);
+  } catch (error) {
+    console.error('이마트 데이터 불러오기 실패:', error.message);
+    martData.emart.error = '데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+  }
 
-                // 조건 충족 시 데이터 추가
-                if (isEgg) {
-                    filteredItems.push({ title, discountRate, price, comment });
-                }
-            });
-
-            return { allItems, filteredItems };
-        }, eggKeywordsEmart);
-
-        martData.emart.eggItems = result.filteredItems;
-            // console.log("=== 원본 상품 데이터 ===");
-            // console.log(result.allItems);
-
-            console.log("=== 이마트 최종 필터링된 데이터 ===");
-            console.log(result.filteredItems);
-
-        await browser.close(); // 브라우저 닫기
-    } catch (error) {
-        console.error('이마트 데이터 불러오기 실패:', error);
-        martData.emart.error = '데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
-
-        // 예외 발생 시 브라우저 안전 종료
-        if (browser) await browser.close();
-    }
-    return martData;
+  return martData;
 }
 
 module.exports = { scrapeEmartData };

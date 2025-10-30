@@ -1,8 +1,7 @@
-/*
-서버에서 데이터를 API로 제공하고, 클라이언트에서 데이터를 받아 html로 렌더링 하는 구조
-puppeteer 없이 사용 가능
-*/
-
+// 로컬에서는 .env 파일, 배포 환경에서는 Render 환경변수 사용
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 const express = require('express');
 const path = require('path');
 const app = express();
