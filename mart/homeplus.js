@@ -23,7 +23,7 @@ async function scrapeHomeplusData() {
         api_key: process.env.SCRAPINGBEE_KEY, // Render 환경변수에 등록
         url: homeplusURL,
         render_js: true, // JS 렌더링 결과 포함
-        wait: 1000, // 1초 대기
+        wait: 2000, // 2초 대기
       },
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
