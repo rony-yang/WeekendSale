@@ -23,21 +23,31 @@ async function scrapeHomeplusData() {
         api_key: process.env.SCRAPINGBEE_KEY, // Render 환경변수에 등록
         url: homeplusURL,
         render_js: true, // JS 렌더링 결과 포함
+        wait: 1000, // 1초 대기
       },
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
       },
     });
 
+    // 응답 데이터 확인
+    // console.log('=== ScrapingBee 응답 데이터 (HTML) ===');
+    // console.log(html);
+
     // HTML 파싱
     const $ = cheerio.load(html);
     const filteredItems = [];
+     const allItems = [];
 
     $('.detailInfoWrap').each((i, el) => {
       const title = $(el).find('.css-ij8ita').text().trim() || '';
       const discountRate = $(el).find('.discountRate').text().trim() || '';
-      const price = $(el).find('.price .priceValue').text().trim().replace(/,/g, '') || '';
+      const priceData = $(el).find('.price .priceValue').text().trim().replace(/,/g, '') || '';
+      const price = `${parseInt(priceData, 10).toLocaleString()}`;
       const comment = $(el).find('.recomComment').text().trim() || '';
+
+      // 모든 데이터를 수집하여 allItems에 추가
+      allItems.push({ title, discountRate, price, comment });
 
       // 계란 관련 상품만 필터링
       const isEgg = new RegExp(eggKeywordsHomeplus.join('|')).test(title);
@@ -45,6 +55,9 @@ async function scrapeHomeplusData() {
     });
 
     martData.homeplus.eggItems = filteredItems;
+
+    // console.log('=== 홈플러스 원본 데이터 ===');
+    // console.log(allItems);
 
     console.log('=== 홈플러스 최종 필터링된 데이터 ===');
     console.log(filteredItems);

@@ -94,8 +94,7 @@
       background: #fff;
       font-size: 16px;
       color: #444;
-      width: 50%;
-      /* 가변 레이아웃 */
+      width: 100%;
     }
 
     .loading {
@@ -262,7 +261,7 @@
 
         // 데이터 추출
         const formattedData = Array.isArray(data) ? data : [];
-        console.log("렌더링에 사용될 홈플러스 데이터:", formattedData);
+        //console.log("렌더링에 사용될 홈플러스 데이터:", formattedData);
 
         // 렌더링 함수 호출
         renderHomeplusData(formattedData, targetDivHomeplus);
@@ -294,7 +293,7 @@
         let displayText = title; // 필수 필드: 제목
 
         if (price) { displayText += ` / ${price} ${discountRate}`; } // 가격 추가
-        // if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
+        if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
         allItems.push({ mart: "이마트", title, price, comment}); // 값 비교를 위한 전체 데이터 모으기
@@ -330,7 +329,7 @@
 
         // 데이터 추출
         const formattedData = Array.isArray(data) ? data : [];
-        console.log("렌더링에 사용될 이마트 데이터:", formattedData);
+        //console.log("렌더링에 사용될 이마트 데이터:", formattedData);
 
         // 렌더링 함수 호출
         renderEmartData(formattedData, targetDivEmart);
@@ -398,7 +397,7 @@
 
         // 데이터 추출
         const formattedData = Array.isArray(data) ? data : [];
-        console.log("렌더링에 사용될 롯데마트 데이터:", formattedData);
+        //console.log("렌더링에 사용될 롯데마트 데이터:", formattedData);
 
         // 렌더링 함수 호출
         renderLottemartData(formattedData, targetDivLottemart);
@@ -496,10 +495,13 @@
     function updateHTMLElement(elementId, product) {
       // 지정된 HTML 요소에 텍스트 업데이트
       const element = document.getElementById(elementId);
+
       if (element && product) {
-        // comment가 존재하지 않을 경우 빈 문자열로 설정
-        const commentText = product.comment ? product.comment : '';
-        element.textContent = `[${product.mart}] ${product.title} 💸${product.price} ${commentText}`;
+        // comment가 있을 경우 "/comment" 형태로 표시, 없으면 빈 문자열
+        const commentText = product.comment ? ` / ${product.comment}` : '';
+        
+        // 최종 텍스트 구성
+        element.textContent = `[${product.mart}] ${product.title} 💸${product.price}${commentText}`;
       }
     }
 
