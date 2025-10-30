@@ -57,8 +57,8 @@ async function scrapeHomeplusData() {
     // console.log('=== 홈플러스 최종 필터링된 데이터 ===');
     // console.log(result.allItems);
 
-    // console.log('=== 홈플러스 최종 필터링된 데이터 ===');
-    // console.log(result.filteredItems);
+    console.log('=== 홈플러스 최종 필터링된 데이터 ===');
+    console.log(result.filteredItems);
 
     await browser.close(); // 브라우저 닫기
   } catch (error) {

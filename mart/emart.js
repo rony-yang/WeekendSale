@@ -63,8 +63,8 @@ async function scrapeEmartData() {
             // console.log("=== 원본 상품 데이터 ===");
             // console.log(result.allItems);
 
-            // console.log("=== 이마트 최종 필터링된 데이터 ===");
-            // console.log(result.filteredItems);
+            console.log("=== 이마트 최종 필터링된 데이터 ===");
+            console.log(result.filteredItems);
 
         await browser.close(); // 브라우저 닫기
     } catch (error) {

@@ -225,7 +225,7 @@
         if (comment) { displayText += ` / ${comment}`; } // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
-        allItems.push({ mart: "홈플러스", title, price }); // 값 비교를 위한 전체 데이터 모으기
+        allItems.push({ mart: "홈플러스", title, price, comment}); // 값 비교를 위한 전체 데이터 모으기
 
         // 최종 텍스트를 div에 설정
         promotionItem.textContent = displayText;
@@ -297,7 +297,7 @@
         // if (comment) {displayText += ` / ${comment}`;} // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
-        allItems.push({ mart: "이마트", title, price }); // 값 비교를 위한 전체 데이터 모으기
+        allItems.push({ mart: "이마트", title, price, comment}); // 값 비교를 위한 전체 데이터 모으기
 
         // 최종 텍스트를 div에 설정
         promotionItem.textContent = displayText;
@@ -365,7 +365,7 @@
         if (comment) { displayText += ` / ${comment}`; } // 코멘트 추가
         // if (promotionPeriod) {displayText += ` / ${promotionPeriod}`;} // 행사 기간 추가
 
-        allItems.push({ mart: "롯데마트", title, price }); // 값 비교를 위한 전체 데이터 모으기
+        allItems.push({ mart: "롯데마트", title, price, comment}); // 값 비교를 위한 전체 데이터 모으기
 
         // 최종 텍스트를 div에 설정
         promotionItem.textContent = displayText;
@@ -497,7 +497,9 @@
       // 지정된 HTML 요소에 텍스트 업데이트
       const element = document.getElementById(elementId);
       if (element && product) {
-        element.textContent = `[${product.mart}] ${product.title} / ${product.price}`;
+        // comment가 존재하지 않을 경우 빈 문자열로 설정
+        const commentText = product.comment ? product.comment : '';
+        element.textContent = `[${product.mart}] ${product.title} 💸${product.price} ${commentText}`;
       }
     }
 
@@ -507,7 +509,9 @@
 
       products.forEach(product => {
         const listItem = document.createElement("li");
-        listItem.textContent = `[${product.mart}] ${product.title} / ${product.price}`;
+        // comment가 존재하지 않으면 빈 문자열로 처리
+        const commentText = product.comment ? ` / ${product.comment}` : '';
+        listItem.textContent = `[${product.mart}] ${product.title} 💸${product.price} ${commentText}`;
         listElement.appendChild(listItem);
       });
     }

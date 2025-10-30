@@ -127,8 +127,8 @@ async function scrapeLottemartData() {
         // console.log("=== 원본 상품 데이터 ===");
         // console.log(result.allItems);
 
-        // console.log("=== 롯데마트 필터링된 데이터 ===");
-        // console.log(result.filteredItems);
+        console.log("=== 롯데마트 필터링된 데이터 ===");
+        console.log(result.filteredItems);
 
         await browser.close();
     } catch (error) {
